@@ -1,6 +1,7 @@
 package io.github.priospot.engine
 
 import io.github.priospot.model.ModelJson
+import io.github.priospot.model.IntegerMetric
 import io.github.priospot.model.PanopticodeDocument
 import io.github.priospot.model.RatioMetric
 import org.junit.jupiter.api.Test
@@ -153,5 +154,56 @@ class PriospotEngineTest {
         assertEquals(1.0, mainCoverage.denominator)
         assertEquals(1.0, testCoverage.numerator)
         assertEquals(1.0, testCoverage.denominator)
+    }
+
+    @Test
+    fun `derives complexity from kotlin source when report entry is missing`() {
+        val sourceDir = tempDir.resolve("src/main/kotlin/com/example")
+        Files.createDirectories(sourceDir)
+        Files.writeString(
+            sourceDir.resolve("Calc.kt"),
+            """
+            package com.example
+
+            class Calc {
+                fun score(input: Int): Int {
+                    if (input > 0 && input < 10) {
+                        return input
+                    }
+                    return 0
+                }
+            }
+            """.trimIndent()
+        )
+
+        val churnLog = tempDir.resolve("gitlog.txt")
+        Files.writeString(
+            churnLog,
+            """
+            --x--2026-01-01--a
+            1\t0\tsrc/main/kotlin/com/example/Calc.kt
+            """.trimIndent()
+        )
+
+        val output = tempDir.resolve("out-source-complexity")
+        val result = PriospotEngine().run(
+            PriospotConfig(
+                projectName = "sample",
+                sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
+                coverageReports = emptyList(),
+                complexityReports = emptyList(),
+                churnLog = churnLog,
+                outputDir = output,
+                deterministicTimestamp = "2026-01-01T00:00:00Z",
+                basePath = tempDir
+            )
+        )
+
+        val doc = ModelJson.mapper.readValue(Files.readString(result.panopticodeJson), PanopticodeDocument::class.java)
+        val file = doc.project.files.single { it.path.endsWith("Calc.kt") }
+        val maxCcn = file.metrics.first { it.name == "MAX-CCN" } as IntegerMetric
+        val ncss = file.metrics.first { it.name == "NCSS" } as IntegerMetric
+        assertEquals(3, maxCcn.value)
+        assertTrue(ncss.value > 0)
     }
 }

@@ -5,6 +5,7 @@ import io.github.priospot.compute.c3.C3Computer
 import io.github.priospot.ingest.churn.ChurnImporter
 import io.github.priospot.ingest.churn.ChurnOptions
 import io.github.priospot.ingest.complexity.ComplexityImporter
+import io.github.priospot.ingest.complexity.KotlinSourceComplexityAnalyzer
 import io.github.priospot.ingest.coverage.CoverageImporter
 import io.github.priospot.ingest.source.SourceInventoryBuilder
 import io.github.priospot.model.ModelJson
@@ -21,6 +22,7 @@ import io.github.priospot.report.svg.ReportType
 import io.github.priospot.report.svg.SvgTreemapReporter
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.InvalidPathException
 import kotlin.system.measureTimeMillis
 
 data class PriospotConfig(
@@ -60,6 +62,7 @@ class PriospotEngine {
     private val churnImporter = ChurnImporter()
     private val coverageImporter = CoverageImporter()
     private val complexityImporter = ComplexityImporter()
+    private val kotlinSourceComplexityAnalyzer = KotlinSourceComplexityAnalyzer()
     private val c3Computer = C3Computer()
     private val svgTreemapReporter = SvgTreemapReporter()
     private val compatXmlExporter = CompatXmlExporter()
@@ -177,17 +180,24 @@ class PriospotEngine {
         val filesWithComplexityFromReport = coverageMerged.files.count { file ->
             file.metrics.any { it.name == MetricNames.MAX_CCN }
         }
-        val filesWithFallbackComplexity = coverageMerged.files.size - filesWithComplexityFromReport
-        if (filesWithFallbackComplexity > 0) {
-            diagnostics += "Complexity fallback (MAX-CCN=${config.defaultMaxCcn}) applied to $filesWithFallbackComplexity files"
-        }
-        val withDefaults = timed("apply-defaults", timings) {
+        val defaultingResult = timed("apply-defaults", timings) {
             applyMetricDefaults(
                 coverageMerged,
                 defaultCoverageNumerator = config.defaultCoverageNumerator,
                 defaultCoverageDenominator = config.defaultCoverageDenominator,
-                defaultMaxCcn = config.defaultMaxCcn
+                defaultMaxCcn = config.defaultMaxCcn,
+                basePath = config.basePath
             )
+        }
+        val withDefaults = defaultingResult.project
+        if (defaultingResult.stats.sourceDerivedComplexityApplied > 0) {
+            diagnostics += "Source-derived complexity applied to ${defaultingResult.stats.sourceDerivedComplexityApplied} files"
+        }
+        if (defaultingResult.stats.sourceDerivedNcssApplied > 0) {
+            diagnostics += "Source-derived NCSS applied to ${defaultingResult.stats.sourceDerivedNcssApplied} files"
+        }
+        if (defaultingResult.stats.defaultComplexityApplied > 0) {
+            diagnostics += "Complexity fallback (MAX-CCN=${config.defaultMaxCcn}) applied to ${defaultingResult.stats.defaultComplexityApplied} files"
         }
 
         val c3Result = timed("compute-c3", timings) {
@@ -231,7 +241,8 @@ class PriospotEngine {
             "filesWithComplexity" to deterministicProject.files.count { file -> file.metrics.any { it.name == "MAX-CCN" } },
             "filesWithC3Computed" to c3Result.filesComputed,
             "filesWithComplexityFromReport" to filesWithComplexityFromReport,
-            "filesWithFallbackComplexity" to filesWithFallbackComplexity
+            "filesWithFallbackComplexity" to defaultingResult.stats.defaultComplexityApplied,
+            "filesWithComplexityFromSource" to defaultingResult.stats.sourceDerivedComplexityApplied
         )
 
         return PriospotResult(
@@ -257,8 +268,12 @@ class PriospotEngine {
         project: io.github.priospot.model.Project,
         defaultCoverageNumerator: Double,
         defaultCoverageDenominator: Double,
-        defaultMaxCcn: Int
-    ): io.github.priospot.model.Project {
+        defaultMaxCcn: Int,
+        basePath: Path
+    ): DefaultingResult {
+        var sourceDerivedComplexityApplied = 0
+        var sourceDerivedNcssApplied = 0
+        var defaultComplexityApplied = 0
         val updatedFiles = project.files.map { file ->
             val byName = file.metrics.associateBy { it.name }.toMutableMap()
             if (MetricNames.LINE_COVERAGE !in byName) {
@@ -273,8 +288,20 @@ class PriospotEngine {
                     coverageDenominator
                 )
             }
+            val sourceComplexity = loadSourceComplexity(file.path, basePath)
+            if (MetricNames.NCSS !in byName && sourceComplexity != null) {
+                byName[MetricNames.NCSS] = IntegerMetric(MetricNames.NCSS, sourceComplexity.ncss)
+                sourceDerivedNcssApplied++
+            }
             if (MetricNames.MAX_CCN !in byName) {
-                byName[MetricNames.MAX_CCN] = IntegerMetric(MetricNames.MAX_CCN, defaultMaxCcn)
+                val computedMaxCcn = sourceComplexity?.maxCcn
+                if (computedMaxCcn != null) {
+                    byName[MetricNames.MAX_CCN] = IntegerMetric(MetricNames.MAX_CCN, computedMaxCcn)
+                    sourceDerivedComplexityApplied++
+                } else {
+                    byName[MetricNames.MAX_CCN] = IntegerMetric(MetricNames.MAX_CCN, defaultMaxCcn)
+                    defaultComplexityApplied++
+                }
             }
             if (MetricNames.LINES_ADDED !in byName) {
                 byName[MetricNames.LINES_ADDED] = IntegerMetric(MetricNames.LINES_ADDED, 0)
@@ -293,7 +320,14 @@ class PriospotEngine {
             }
             file.copy(metrics = byName.values.sortedBy { it.name })
         }
-        return project.copy(files = updatedFiles)
+        return DefaultingResult(
+            project = project.copy(files = updatedFiles),
+            stats = DefaultingStats(
+                sourceDerivedComplexityApplied = sourceDerivedComplexityApplied,
+                sourceDerivedNcssApplied = sourceDerivedNcssApplied,
+                defaultComplexityApplied = defaultComplexityApplied
+            )
+        )
     }
 
     private fun isTestSourceFile(path: String): Boolean {
@@ -310,4 +344,25 @@ class PriospotEngine {
             normalized
         }
     }
+
+    private fun loadSourceComplexity(path: String, basePath: Path): io.github.priospot.ingest.complexity.KotlinFileComplexity? {
+        if (!path.endsWith(".kt", ignoreCase = true)) return null
+        val filePath = try {
+            basePath.resolve(path).normalize()
+        } catch (_: InvalidPathException) {
+            return null
+        }
+        return kotlinSourceComplexityAnalyzer.analyze(filePath)
+    }
+
+    private data class DefaultingResult(
+        val project: io.github.priospot.model.Project,
+        val stats: DefaultingStats
+    )
+
+    private data class DefaultingStats(
+        val sourceDerivedComplexityApplied: Int,
+        val sourceDerivedNcssApplied: Int,
+        val defaultComplexityApplied: Int
+    )
 }

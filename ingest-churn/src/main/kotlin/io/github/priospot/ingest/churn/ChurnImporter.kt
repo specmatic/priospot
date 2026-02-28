@@ -102,15 +102,12 @@ class ChurnImporter {
                 val removed = parts[1].toIntOrNull() ?: 0
                 val path = normalizePath(parts[2].trim())
                 val previous = result[path]
-                result[path] = if (previous == null) {
-                    ChurnStats(added, removed, 1)
-                } else {
-                    previous.copy(
-                        linesAdded = previous.linesAdded + added,
-                        linesRemoved = previous.linesRemoved + removed,
-                        timesChanged = previous.timesChanged + 1
-                    )
-                }
+                result[path] = previous?.copy(
+                    linesAdded = previous.linesAdded + added,
+                    linesRemoved = previous.linesRemoved + removed,
+                    timesChanged = previous.timesChanged + 1
+                )
+                    ?: ChurnStats(added, removed, 1)
             }
 
         return result

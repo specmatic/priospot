@@ -59,19 +59,31 @@ class SvgTreemapReporter {
         val panelWidth = 420.0
         val treemapWidth = width - panelWidth
 
-        val root = buildTree(project.files)
-        val fileElements = mutableListOf<String>()
-        val packageOverlayElements = mutableListOf<String>()
+        val allFiles = project.files
+        val nonTestFiles = project.files.filterNot { isTestFilePath(it.path) }
+        val allFileElements = mutableListOf<String>()
+        val allPackageOverlayElements = mutableListOf<String>()
+        val nonTestFileElements = mutableListOf<String>()
+        val nonTestPackageOverlayElements = mutableListOf<String>()
         val legendElements = buildLegendElements(type, treemapWidth, height)
 
         renderNode(
-            node = root,
+            node = buildTree(allFiles),
             rect = Rect(0.0, 0.0, treemapWidth, height),
             depth = 0,
             packageKey = "",
             reportType = type,
-            packageOverlayElements = packageOverlayElements,
-            fileElements = fileElements
+            packageOverlayElements = allPackageOverlayElements,
+            fileElements = allFileElements
+        )
+        renderNode(
+            node = buildTree(nonTestFiles),
+            rect = Rect(0.0, 0.0, treemapWidth, height),
+            depth = 0,
+            packageKey = "",
+            reportType = type,
+            packageOverlayElements = nonTestPackageOverlayElements,
+            fileElements = nonTestFileElements
         )
 
         val content = """
@@ -82,9 +94,34 @@ class SvgTreemapReporter {
     .package-label { font-family: monospace; font-size: 11px; fill: #333; }
   </style>
   <script><![CDATA[
+    var showTestClasses = true;
+
     function clearChildren(node) {
       while (node && node.firstChild) {
         node.removeChild(node.firstChild);
+      }
+    }
+
+    function resetSelection() {
+      setWrappedText('detail-file', 'Click a file box', 1210, 43, 4, 16);
+      setWrappedText('detail-primary', 'n/a', 1210, 43, 2, 16);
+      clearChildren(document.getElementById('detail-metrics'));
+
+      var cells = document.getElementsByClassName('treemap-cell');
+      for (var i = 0; i < cells.length; i++) {
+        var stroke = cells[i].getAttribute('data-stroke');
+        if (stroke) {
+          cells[i].setAttribute('stroke', stroke);
+        }
+        cells[i].setAttribute('stroke-width', '1');
+      }
+      var packageBoxes = document.getElementsByClassName('package-box');
+      for (var j = 0; j < packageBoxes.length; j++) {
+        var packageStroke = packageBoxes[j].getAttribute('data-stroke');
+        if (packageStroke) {
+          packageBoxes[j].setAttribute('stroke', packageStroke);
+        }
+        packageBoxes[j].setAttribute('stroke-width', '1.4');
       }
     }
 
@@ -121,12 +158,14 @@ class SvgTreemapReporter {
       var moduleKey = selectedParts.length ? selectedParts[0] : '';
       var metricsRaw = node.getAttribute('data-metrics') || '';
       var metrics = metricsRaw.length ? metricsRaw.split(';;') : [];
+      var packageBoxes = document.getElementsByClassName('package-box');
 
+      resetSelection();
       setWrappedText('detail-file', file, 1210, 43, 4, 16);
       setWrappedText('detail-primary', metric, 1210, 43, 2, 16);
 
       var metricsText = document.getElementById('detail-metrics');
-      clearChildren(metricsText);
+      clearChildren(document.getElementById('detail-metrics'));
       if (metricsText) {
         for (var i = 0; i < metrics.length; i++) {
           var tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
@@ -137,29 +176,13 @@ class SvgTreemapReporter {
         }
       }
 
-      var cells = document.getElementsByClassName('treemap-cell');
-      for (var i = 0; i < cells.length; i++) {
-        var stroke = cells[i].getAttribute('data-stroke');
-        if (stroke) {
-          cells[i].setAttribute('stroke', stroke);
-        }
-        cells[i].setAttribute('stroke-width', '1');
-      }
-      var packageBoxes = document.getElementsByClassName('package-box');
-      for (var j = 0; j < packageBoxes.length; j++) {
-        var packageStroke = packageBoxes[j].getAttribute('data-stroke');
-        if (packageStroke) {
-          packageBoxes[j].setAttribute('stroke', packageStroke);
-        }
-        packageBoxes[j].setAttribute('stroke-width', '1.4');
-      }
-
       node.setAttribute('stroke', '#1a4dd9');
       node.setAttribute('stroke-width', '3');
 
       if (packageKey.length) {
         var ancestryPalette = ['#1a4dd9', '#3567e0', '#5888e8', '#7da7ef', '#a6c5f6', '#d0e0fb'];
         for (var k = 0; k < packageBoxes.length; k++) {
+          if (packageBoxes[k].style.display === 'none') continue;
           var key = packageBoxes[k].getAttribute('data-package-key') || '';
           if (!key.length) continue;
 
@@ -183,13 +206,52 @@ class SvgTreemapReporter {
         }
       }
     }
+
+    function updateTestToggle() {
+      var label = document.getElementById('test-filter-label');
+      var checkbox = document.getElementById('test-filter-checkbox');
+      var checkmark = document.getElementById('test-filter-checkmark');
+      if (label) {
+        label.textContent = 'Show test classes';
+      }
+      if (checkbox) {
+        checkbox.setAttribute('fill', showTestClasses ? '#2e7d32' : '#ffffff');
+      }
+      if (checkmark) {
+        checkmark.style.display = showTestClasses ? '' : 'none';
+      }
+    }
+
+    function applyTestClassFilter() {
+      var allView = document.getElementById('view-all');
+      var nonTestView = document.getElementById('view-no-tests');
+      if (allView) {
+        allView.style.display = showTestClasses ? '' : 'none';
+      }
+      if (nonTestView) {
+        nonTestView.style.display = showTestClasses ? 'none' : '';
+      }
+      resetSelection();
+      updateTestToggle();
+    }
+
+    function toggleTestClasses() {
+      showTestClasses = !showTestClasses;
+      applyTestClassFilter();
+    }
   ]]></script>
 
   <rect x="0" y="0" width="${treemapWidth.toInt()}" height="${height.toInt()}" fill="#f8f8f8"/>
-  ${fileElements.joinToString("\n")}
-  ${packageOverlayElements.joinToString("\n")}
+  <g id="view-all">
+    ${allFileElements.joinToString("\n")}
+    ${allPackageOverlayElements.joinToString("\n")}
+  </g>
+  <g id="view-no-tests" style="display:none;">
+    ${nonTestFileElements.joinToString("\n")}
+    ${nonTestPackageOverlayElements.joinToString("\n")}
+  </g>
 
-  <rect x="${treemapWidth}" y="0" width="${panelWidth.toInt()}" height="${height.toInt()}" fill="#f0f0f0" stroke="#c0c0c0"/>
+  <rect x="$treemapWidth" y="0" width="${panelWidth.toInt()}" height="${height.toInt()}" fill="#f0f0f0" stroke="#c0c0c0"/>
   <text x="1210" y="30" font-family="monospace" font-size="18" fill="#111">File Details</text>
   <text x="1210" y="58" font-family="monospace" font-size="13" fill="#555">Selected File</text>
   <text id="detail-file" x="1210" y="78" font-family="monospace" font-size="12" fill="#111">Click a file box</text>
@@ -199,7 +261,15 @@ class SvgTreemapReporter {
 
   <text x="1210" y="220" font-family="monospace" font-size="13" fill="#555">All Metrics</text>
   <text id="detail-metrics" x="1210" y="244" font-family="monospace" font-size="12" fill="#111"></text>
+  <g onclick="toggleTestClasses()" style="cursor:pointer;">
+    <rect id="test-filter-checkbox" x="1210" y="520" width="16" height="16" fill="#2e7d32" stroke="#666" stroke-width="1.2" rx="2" ry="2"/>
+    <polyline id="test-filter-checkmark" points="1213,528 1217,532 1224,523" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text id="test-filter-label" x="1234" y="533" font-family="monospace" font-size="12" fill="#111">Show test classes</text>
+  </g>
   ${legendElements.joinToString("\n")}
+  <script><![CDATA[
+    applyTestClassFilter();
+  ]]></script>
 </svg>
         """.trimIndent()
 
@@ -252,7 +322,7 @@ class SvgTreemapReporter {
                 2 -> "#666"
                 else -> "#555"
             }
-            val packageName = if (packageKey.isBlank()) node.label else packageKey
+            val packageName = packageKey.ifBlank { node.label }
             packageOverlayElements += """
 <g>
   <rect class="package-box" x="${insetRect.x}" y="${insetRect.y}" width="${insetRect.width}" height="${insetRect.height}" fill="none" stroke="$stroke" stroke-width="1.4" data-package-key="${escape(packageKey)}" data-stroke="$stroke" pointer-events="none">
@@ -468,6 +538,11 @@ class SvgTreemapReporter {
         depth == 1 -> MODULE_BOX_INSET
         depth == 2 -> TOP_PACKAGE_BOX_INSET
         else -> (SUBPACKAGE_BASE_INSET - ((depth - 3) * SUBPACKAGE_STEP_DOWN)).coerceAtLeast(SUBPACKAGE_MIN_INSET)
+    }
+
+    private fun isTestFilePath(path: String): Boolean {
+        val normalized = path.replace('\\', '/').lowercase()
+        return normalized.startsWith("src/test/") || normalized.contains("/src/test/")
     }
 
     private companion object {

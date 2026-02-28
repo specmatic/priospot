@@ -20,10 +20,18 @@ class SvgTreemapReporterTest {
             files = listOf(
                 FileEntry(
                     name = "Foo.kt",
-                    path = "src/Foo.kt",
+                    path = "src/main/kotlin/com/example/Foo.kt",
                     metrics = listOf(
                         IntegerMetric(MetricNames.NCSS, 10),
                         DecimalMetric(MetricNames.C3_INDICATOR, 0.75)
+                    )
+                ),
+                FileEntry(
+                    name = "FooTest.kt",
+                    path = "src/test/kotlin/com/example/FooTest.kt",
+                    metrics = listOf(
+                        IntegerMetric(MetricNames.NCSS, 8),
+                        DecimalMetric(MetricNames.C3_INDICATOR, 0.10)
                     )
                 )
             )
@@ -38,5 +46,10 @@ class SvgTreemapReporterTest {
         assertTrue(svg.contains("<svg"))
         assertTrue(svg.contains("<rect"))
         assertTrue(svg.contains("<title>"))
+        assertTrue(svg.contains("id=\"view-all\""))
+        assertTrue(svg.contains("id=\"view-no-tests\""))
+        assertTrue(svg.contains("id=\"test-filter-checkbox\""))
+        assertTrue(svg.contains("toggleTestClasses()"))
+        assertTrue(svg.contains("Show test classes"))
     }
 }

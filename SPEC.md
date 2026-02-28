@@ -141,6 +141,8 @@ SVG must include:
    2. full parent package chain highlighted with varying colors
    3. module-level boundary highlighted with a distinct color
 5. In-box text labels are optional and may be omitted when density is high.
+6. Right panel must include a checkbox control to include/exclude test classes (`src/test/**`).
+7. When test classes are excluded, treemap layout must be re-rendered using only non-test files (not just hidden in-place).
 
 ### 8.6 Legend
 1. Every generated SVG must include a legend in the right panel.
@@ -360,17 +362,19 @@ When file-level coverage is missing after merge:
 5. Tooling may differ, but final mapped metrics must match required names/levels.
 6. Multiple complexity reports may be provided; file metrics must be merged by normalized file path.
 7. Parsers must support common Detekt XML variants, including checkstyle-style output.
+8. When a source file is present in inventory but absent in complexity reports, implementation should derive file-level `MAX-CCN` and `NCSS` directly from source where possible before applying default fallback.
 
 ### 10.5 Metric Provider Contract (Reuse First)
 1. Coverage must come from host-generated coverage reports.
 2. Complexity must come from host-generated static-analysis output.
-3. Churn must come from git history (`git log`/JGit) or fixed baseline churn log.
-4. The C3 implementation scope is:
+3. Source-derived complexity fallback is allowed when host complexity output does not contain a file present in source inventory.
+4. Churn must come from git history (`git log`/JGit) or fixed baseline churn log.
+5. The C3 implementation scope is:
    1. parse/adapt tool outputs
    2. normalize to canonical JSON
    3. compute C3 and generate reports
-5. The C3 implementation must not introduce a proprietary full parser for metrics already available from standard tools.
-6. Path normalization is mandatory so coverage, complexity, and churn metrics join on the same canonical file path key.
+6. The C3 implementation must not introduce a proprietary full parser for metrics already available from standard tools.
+7. Path normalization is mandatory so coverage, complexity, and churn metrics join on the same canonical file path key.
 
 ## 11. Execution Contract (Integration-Agnostic)
 Primary contract: each host integration must expose one top-level command/task named `priospot`.
@@ -463,7 +467,7 @@ Config keys:
 ## 14. Error Handling
 1. Missing required input file -> fail fast with non-zero exit.
 2. Missing optional metric source -> emit warning and continue.
-3. Missing configured coverage/complexity report file -> warning + continue using defaults for unmatched files.
+3. Missing configured coverage/complexity report file -> warning + continue; unmatched complexity files should use source-derived complexity where possible, else defaults.
 4. Method/class mapping miss -> warning in diagnostics section, continue.
 5. Invalid formula inputs (division by zero, null metrics) -> skip C3 for that file and warn.
 
@@ -476,7 +480,8 @@ Config keys:
    4. files with complexity
    5. files with C3 computed
    6. files with complexity from report
-   7. files with fallback complexity
+   7. files with complexity from source
+   8. files with fallback complexity
 3. Warning list for unmapped methods/classes.
 
 ## 16. Reference Implementation Profile (Kotlin/Gradle)

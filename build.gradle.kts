@@ -94,8 +94,7 @@ tasks.register<JavaExec>("priospot") {
                 )
             }
             .filter(File::exists)
-            .map { repoRoot.relativize(it.toPath()).toString().replace(File.separatorChar, '/') }
-            .joinToString(",")
+            .joinToString(",") { repoRoot.relativize(it.toPath()).toString().replace(File.separatorChar, '/') }
     }
     val discoveredCoverageReports = provider {
         subprojects

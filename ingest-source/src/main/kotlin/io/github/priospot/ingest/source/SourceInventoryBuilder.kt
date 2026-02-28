@@ -5,7 +5,6 @@ import io.github.priospot.model.Project
 import io.github.priospot.model.normalizePath
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.streams.toList
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 

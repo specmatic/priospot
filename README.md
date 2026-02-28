@@ -53,7 +53,7 @@ Notes:
 - Missing configured coverage/complexity report files are treated as warnings; unmatched files use defaults:
   - coverage defaults to `0/1` for non-test sources
   - coverage defaults to `1/1` for `src/test/**` sources
-  - complexity defaults to `MAX-CCN=1000`
+  - complexity is derived from Kotlin source when report entries are missing; if source-derived complexity is unavailable, defaults to `MAX-CCN=1000`
 
 Optional explicit override (when defaults do not fit your build):
 
@@ -139,6 +139,7 @@ Supported keys (for host integrations):
 - No in-box labels by default (better density at scale); names are shown on hover tooltips
 - Click highlights selected file, full parent package chain, and module boundary
 - Right panel shows selected file path, primary metric, and all file metrics
+- Checkbox in right panel toggles `Show test classes`; when unchecked, treemap re-renders using only non-test files (`src/test/**` excluded)
 - Bottom-right legend explains colors for each report type (`priospot`, `coverage`, `complexity`, `churn`)
 
 ## Sample Treemaps (Good vs Problem Areas)
