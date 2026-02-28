@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/panopticode.schema.json",
+  "title": "Panopticode Document",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "project"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "project": {
+      "type": "object",
+      "required": ["name", "basePath", "metrics", "files"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": ["string", "null"] },
+        "basePath": { "type": "string" },
+        "metrics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/metric" }
+        },
+        "files": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/file" }
+        },
+        "supplements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "metrics", "files"],
+            "properties": {
+              "name": { "type": "string" },
+              "metrics": { "type": "array", "items": { "$ref": "#/$defs/metric" } },
+              "files": { "type": "array", "items": { "$ref": "#/$defs/file" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "metric": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "name", "value"],
+          "properties": {
+            "kind": { "const": "integer" },
+            "name": { "type": "string" },
+            "value": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "name", "value"],
+          "properties": {
+            "kind": { "const": "decimal" },
+            "name": { "type": "string" },
+            "value": { "type": "number" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "name", "numerator", "denominator"],
+          "properties": {
+            "kind": { "const": "ratio" },
+            "name": { "type": "string" },
+            "numerator": { "type": "number" },
+            "denominator": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "file": {
+      "type": "object",
+      "required": ["name", "path", "metrics"],
+      "properties": {
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "metrics": { "type": "array", "items": { "$ref": "#/$defs/metric" } }
+      }
+    }
+  }
+}
