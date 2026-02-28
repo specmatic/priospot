@@ -1,5 +1,8 @@
 package io.github.priospot.engine
 
+import io.github.priospot.model.ModelJson
+import io.github.priospot.model.PanopticodeDocument
+import io.github.priospot.model.RatioMetric
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -105,5 +108,50 @@ class PriospotEngineTest {
         assertTrue(json.contains("\"name\" : \"Line Coverage\""))
         assertTrue(json.contains("\"name\" : \"MAX-CCN\""))
         assertTrue(json.contains("\"name\" : \"C3 Indicator\""))
+    }
+
+    @Test
+    fun `defaults missing coverage to full for test sources`() {
+        val mainDir = tempDir.resolve("src/main/kotlin/com/example")
+        val testDir = tempDir.resolve("src/test/kotlin/com/example")
+        Files.createDirectories(mainDir)
+        Files.createDirectories(testDir)
+        Files.writeString(mainDir.resolve("MainFile.kt"), "class MainFile")
+        Files.writeString(testDir.resolve("MainFileTest.kt"), "class MainFileTest")
+
+        val churnLog = tempDir.resolve("gitlog.txt")
+        Files.writeString(
+            churnLog,
+            """
+            --x--2026-01-01--a
+            1\t0\tsrc/main/kotlin/com/example/MainFile.kt
+            1\t0\tsrc/test/kotlin/com/example/MainFileTest.kt
+            """.trimIndent()
+        )
+
+        val output = tempDir.resolve("out-test-defaults")
+        val result = PriospotEngine().run(
+            PriospotConfig(
+                projectName = "sample",
+                sourceRoots = listOf(tempDir.resolve("src/main/kotlin"), tempDir.resolve("src/test/kotlin")),
+                coverageReports = emptyList(),
+                complexityReports = emptyList(),
+                churnLog = churnLog,
+                outputDir = output,
+                deterministicTimestamp = "2026-01-01T00:00:00Z",
+                basePath = tempDir
+            )
+        )
+
+        val doc = ModelJson.mapper.readValue(Files.readString(result.panopticodeJson), PanopticodeDocument::class.java)
+        val mainFile = doc.project.files.first { it.path.endsWith("MainFile.kt") }
+        val testFile = doc.project.files.first { it.path.endsWith("MainFileTest.kt") }
+        val mainCoverage = mainFile.metrics.first { it.name == "Line Coverage" } as RatioMetric
+        val testCoverage = testFile.metrics.first { it.name == "Line Coverage" } as RatioMetric
+
+        assertEquals(0.0, mainCoverage.numerator)
+        assertEquals(1.0, mainCoverage.denominator)
+        assertEquals(1.0, testCoverage.numerator)
+        assertEquals(1.0, testCoverage.denominator)
     }
 }

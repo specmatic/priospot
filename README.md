@@ -51,7 +51,8 @@ Notes:
   - `build/reports/kover/report.xml`
   - `build/reports/detekt/detekt.xml`
 - Missing configured coverage/complexity report files are treated as warnings; unmatched files use defaults:
-  - coverage defaults to `0/1`
+  - coverage defaults to `0/1` for non-test sources
+  - coverage defaults to `1/1` for `src/test/**` sources
   - complexity defaults to `MAX-CCN=1000`
 
 Optional explicit override (when defaults do not fit your build):

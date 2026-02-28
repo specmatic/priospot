@@ -262,10 +262,15 @@ class PriospotEngine {
         val updatedFiles = project.files.map { file ->
             val byName = file.metrics.associateBy { it.name }.toMutableMap()
             if (MetricNames.LINE_COVERAGE !in byName) {
+                val (coverageNumerator, coverageDenominator) = if (isTestSourceFile(file.path)) {
+                    1.0 to 1.0
+                } else {
+                    defaultCoverageNumerator to defaultCoverageDenominator
+                }
                 byName[MetricNames.LINE_COVERAGE] = RatioMetric(
                     MetricNames.LINE_COVERAGE,
-                    defaultCoverageNumerator,
-                    defaultCoverageDenominator
+                    coverageNumerator,
+                    coverageDenominator
                 )
             }
             if (MetricNames.MAX_CCN !in byName) {
@@ -289,6 +294,11 @@ class PriospotEngine {
             file.copy(metrics = byName.values.sortedBy { it.name })
         }
         return project.copy(files = updatedFiles)
+    }
+
+    private fun isTestSourceFile(path: String): Boolean {
+        val normalized = normalizePath(path).lowercase()
+        return normalized.startsWith("src/test/") || normalized.contains("/src/test/")
     }
 
     private fun normalizeInputPath(path: String, basePath: Path): String {

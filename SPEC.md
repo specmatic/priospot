@@ -341,6 +341,10 @@ Normalized coverage JSON must contain:
 5. deterministic ordering by file path
 6. schema must conform to section `9.5`
 
+When file-level coverage is missing after merge:
+1. non-test source files default to configured fallback (`defaultCoverageNumerator/defaultCoverageDenominator`, default `0/1`)
+2. test source files (`src/test/**`) default to full coverage (`1/1`) to avoid penalizing test code for missing self-coverage reports
+
 ### 10.4 Complexity Input
 1. Primary complexity source is host-generated static-analysis output.
 2. Supported examples by ecosystem:
@@ -394,6 +398,10 @@ Expose these keys in the host integration configuration:
 14. `defaultCoverageNumerator` (optional, default `0.0`)
 15. `defaultCoverageDenominator` (optional, default `1.0`)
 16. `defaultMaxCcn` (optional, default `1000`)
+
+Coverage default notes:
+1. `defaultCoverageNumerator/defaultCoverageDenominator` apply to non-test files when coverage is missing
+2. test files under `src/test/**` are forced to `1/1` when coverage is missing
 
 ### 11.3 Wiring Requirements
 1. `priospot` must orchestrate analyze + report generation internally.
