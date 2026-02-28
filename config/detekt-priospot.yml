@@ -1,0 +1,4 @@
+complexity:
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 0

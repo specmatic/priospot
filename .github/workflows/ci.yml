@@ -19,3 +19,11 @@ jobs:
       - name: Validate CLI wiring
         run: |
           ./gradlew :cli:run
+      - name: Generate PrioSpot report
+        run: ./gradlew priospot
+      - name: Upload PrioSpot treemap
+        uses: actions/upload-artifact@v4
+        with:
+          name: priospot-interactive-treemap
+          path: build/reports/priospot/priospot-interactive-treemap.svg
+          if-no-files-found: error

@@ -26,22 +26,44 @@ fun main(args: Array<String>) {
 
 private fun runAnalyze(args: List<String>) {
     val opts = parseOptions(args)
-    val required = listOf("project-name", "source-roots", "coverage-report", "complexity-report", "output-json")
+    val required = listOf("project-name", "source-roots", "output-json")
     required.forEach { key ->
         require(opts.containsKey(key)) { "Missing required option --$key" }
+    }
+    require(opts.containsKey("coverage-report") || opts.containsKey("coverage-reports")) {
+        "Missing required option --coverage-report or --coverage-reports"
+    }
+    require(opts.containsKey("complexity-report") || opts.containsKey("complexity-reports")) {
+        "Missing required option --complexity-report or --complexity-reports"
     }
 
     val basePath = Path.of(".").absolute().normalize()
     val outputPath = Path.of(opts.getValue("output-json"))
     val outputDir = outputPath.parent ?: Path.of(".")
+    val coverageReports = when {
+        opts.containsKey("coverage-reports") -> opts.getValue("coverage-reports")
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .map { basePath.resolve(it) }
+        else -> listOf(basePath.resolve(opts.getValue("coverage-report")))
+    }
+    val complexityReports = when {
+        opts.containsKey("complexity-reports") -> opts.getValue("complexity-reports")
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .map { basePath.resolve(it) }
+        else -> listOf(basePath.resolve(opts.getValue("complexity-report")))
+    }
 
     val result = PriospotEngine().run(
         PriospotConfig(
             projectName = opts.getValue("project-name"),
             projectVersion = opts["project-version"],
             sourceRoots = opts.getValue("source-roots").split(',').map { basePath.resolve(it.trim()) },
-            coverageReports = listOf(basePath.resolve(opts.getValue("coverage-report"))),
-            complexityReports = listOf(basePath.resolve(opts.getValue("complexity-report"))),
+            coverageReports = coverageReports,
+            complexityReports = complexityReports,
             churnDays = opts["churn-days"]?.toInt() ?: 30,
             churnLog = opts["churn-log"]?.let { basePath.resolve(it) },
             outputDir = outputDir,
@@ -98,7 +120,7 @@ private fun printUsage() {
     println(
         """
         Usage:
-          priospot analyze --project-name <string> --source-roots <csv> --coverage-report <path> --complexity-report <path> --output-json <path> [--project-version <string>] [--churn-days <int>] [--churn-log <path>] [--emit-compat-xml <true|false>]
+          priospot analyze --project-name <string> --source-roots <csv> (--coverage-report <path> | --coverage-reports <csv>) (--complexity-report <path> | --complexity-reports <csv>) --output-json <path> [--project-version <string>] [--churn-days <int>] [--churn-log <path>] [--emit-compat-xml <true|false>]
           priospot report --input-json <path> --type <priospot|coverage|complexity|churn> --output-svg <path>
         """.trimIndent()
     )
