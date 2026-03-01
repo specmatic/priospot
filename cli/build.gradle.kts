@@ -1,18 +1,15 @@
 plugins {
     kotlin("jvm")
-    application
 }
 
 dependencies {
     implementation(project(":engine"))
     implementation(project(":model"))
     implementation(project(":report-svg"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
-    testImplementation(kotlin("test"))
-}
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.1")
+    implementation("info.picocli:picocli:4.7.7")
 
-application {
-    mainClass.set("io.github.priospot.cli.MainKt")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 }
-
-tasks.test { useJUnitPlatform() }

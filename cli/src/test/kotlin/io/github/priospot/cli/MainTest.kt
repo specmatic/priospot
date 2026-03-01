@@ -1,16 +1,20 @@
 package io.github.priospot.cli
 
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isTrue
 import io.github.priospot.model.ModelJson
+import io.github.priospot.model.IntegerMetric
 import io.github.priospot.model.PanopticodeDocument
+import io.github.priospot.model.RatioMetric
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class MainTest {
     @TempDir
@@ -18,19 +22,18 @@ class MainTest {
 
     @Test
     fun `prints usage when no args are provided`() {
-        val out = captureStdout { main(emptyArray()) }
-        assertTrue(out.contains("Usage:"))
+        val out = captureStdout { assertThat(runCli(emptyArray())).isEqualTo(0) }
+        assertThat(out).contains("Usage:")
     }
 
     @Test
     fun `analyze supports multi-report args and writes priospot json`() {
-        val base = Path.of(".").toAbsolutePath().normalize()
         val sourceRoot = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(sourceRoot)
         val sourceFile = sourceRoot.resolve("Sample.kt")
         Files.writeString(sourceFile, "package demo\nclass Sample { fun ok() = 1 }\n")
 
-        val relativeFilePath = normalize(base.relativize(sourceFile).toString())
+        val sourceFilePath = sourceFile.fileName.toString()
         val coverage1 = tempDir.resolve("coverage-1.json")
         val coverage2 = tempDir.resolve("coverage-2.json")
         Files.writeString(
@@ -41,7 +44,7 @@ class MainTest {
               "generator": "coverageReport",
               "generatedAt": "2026-02-28T00:00:00Z",
               "files": [
-                { "path": "$relativeFilePath", "lineCoverage": { "covered": 3, "total": 5 } }
+                { "path": "$sourceFilePath", "lineCoverage": { "covered": 3, "total": 5 } }
               ]
             }
             """.trimIndent()
@@ -54,7 +57,7 @@ class MainTest {
               "generator": "coverageReport",
               "generatedAt": "2026-02-28T00:00:00Z",
               "files": [
-                { "path": "$relativeFilePath", "lineCoverage": { "covered": 2, "total": 5 } }
+                { "path": "$sourceFilePath", "lineCoverage": { "covered": 2, "total": 5 } }
               ]
             }
             """.trimIndent()
@@ -64,45 +67,50 @@ class MainTest {
         val complexity2 = tempDir.resolve("complexity-2.json")
         Files.writeString(
             complexity1,
-            """[{"path":"$relativeFilePath","ncss":7,"maxCcn":2}]"""
+            """[{"path":"$sourceFilePath","ncss":7,"maxCcn":2}]"""
         )
         Files.writeString(
             complexity2,
-            """[{"path":"$relativeFilePath","ncss":11,"maxCcn":4}]"""
+            """[{"path":"$sourceFilePath","ncss":11,"maxCcn":4}]"""
         )
 
         val outputJson = tempDir.resolve("out/priospot.json")
-        main(
+        assertThat(
+            runCli(
             arrayOf(
                 "analyze",
                 "--project-name", "cli-test",
-                "--source-roots", normalize(base.relativize(sourceRoot).toString()),
-                "--coverage-reports", listOf(coverage1, coverage2).joinToString(",") { normalize(base.relativize(it).toString()) },
-                "--complexity-reports", listOf(complexity1, complexity2).joinToString(",") { normalize(base.relativize(it).toString()) },
-                "--output-json", normalize(base.relativize(outputJson).toString())
+                "--source-roots", normalize(sourceRoot.toAbsolutePath().toString()),
+                "--coverage-reports", listOf(coverage1, coverage2).joinToString(",") {
+                    normalize(it.toAbsolutePath().toString())
+                },
+                "--complexity-reports", listOf(complexity1, complexity2).joinToString(",") {
+                    normalize(it.toAbsolutePath().toString())
+                },
+                "--output-json", normalize(outputJson.toAbsolutePath().toString())
             )
-        )
+            )
+        ).isEqualTo(0)
 
-        assertTrue(Files.exists(outputJson))
+        assertThat(Files.exists(outputJson)).isTrue()
         val doc = ModelJson.mapper.readValue(Files.readString(outputJson), PanopticodeDocument::class.java)
         val file = doc.project.files.single()
-        val maxCcn = file.metrics.first { it.name == "MAX-CCN" }
-        val ncss = file.metrics.first { it.name == "NCSS" }
-        val coverage = file.metrics.first { it.name == "Line Coverage" }
-        assertTrue(maxCcn.toString().contains("value=4"))
-        assertTrue(ncss.toString().contains("value=18"))
-        assertTrue(coverage.toString().contains("numerator=5.0"))
-        assertTrue(coverage.toString().contains("denominator=10.0"))
+        val maxCcn = file.metrics.first { it.name == "MAX-CCN" } as IntegerMetric
+        val ncss = file.metrics.first { it.name == "NCSS" } as IntegerMetric
+        val coverage = file.metrics.first { it.name == "Line Coverage" } as RatioMetric
+        assertThat(maxCcn.value).isEqualTo(4)
+        assertThat(ncss.value).isEqualTo(18)
+        assertThat(coverage.numerator).isEqualTo(5.0)
+        assertThat(coverage.denominator).isEqualTo(10.0)
     }
 
     @Test
     fun `report generates svg from priospot json`() {
-        val base = Path.of(".").toAbsolutePath().normalize()
         val sourceRoot = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(sourceRoot)
         val sourceFile = sourceRoot.resolve("ReportMe.kt")
         Files.writeString(sourceFile, "class ReportMe\n")
-        val relativeFilePath = normalize(base.relativize(sourceFile).toString())
+        val sourceFilePath = sourceFile.fileName.toString()
 
         val coverage = tempDir.resolve("coverage.json")
         val complexity = tempDir.resolve("complexity.json")
@@ -114,58 +122,72 @@ class MainTest {
               "generator": "coverageReport",
               "generatedAt": "2026-02-28T00:00:00Z",
               "files": [
-                { "path": "$relativeFilePath", "lineCoverage": { "covered": 1, "total": 1 } }
+                { "path": "$sourceFilePath", "lineCoverage": { "covered": 1, "total": 1 } }
               ]
             }
             """.trimIndent()
         )
         Files.writeString(
             complexity,
-            """[{"path":"$relativeFilePath","ncss":3,"maxCcn":1}]"""
+            """[{"path":"$sourceFilePath","ncss":3,"maxCcn":1}]"""
         )
 
         val outputJson = tempDir.resolve("out/priospot.json")
         val outputSvg = tempDir.resolve("out/priospot-interactive-treemap.svg")
 
-        main(
+        assertThat(
+            runCli(
             arrayOf(
                 "analyze",
                 "--project-name", "cli-report-test",
-                "--source-roots", normalize(base.relativize(sourceRoot).toString()),
-                "--coverage-report", normalize(base.relativize(coverage).toString()),
-                "--complexity-report", normalize(base.relativize(complexity).toString()),
-                "--output-json", normalize(base.relativize(outputJson).toString())
+                "--source-roots", normalize(sourceRoot.toAbsolutePath().toString()),
+                "--coverage-report", normalize(coverage.toAbsolutePath().toString()),
+                "--complexity-report", normalize(complexity.toAbsolutePath().toString()),
+                "--output-json", normalize(outputJson.toAbsolutePath().toString())
             )
-        )
-        main(
+            )
+        ).isEqualTo(0)
+        assertThat(
+            runCli(
             arrayOf(
                 "report",
-                "--input-json", normalize(base.relativize(outputJson).toString()),
+                "--input-json", normalize(outputJson.toAbsolutePath().toString()),
                 "--type", "priospot",
-                "--output-svg", normalize(base.relativize(outputSvg).toString())
+                "--output-svg", normalize(outputSvg.toAbsolutePath().toString())
             )
-        )
+            )
+        ).isEqualTo(0)
 
-        assertTrue(Files.exists(outputSvg))
+        assertThat(Files.exists(outputSvg)).isTrue()
         val svg = Files.readString(outputSvg)
-        assertTrue(svg.contains("<svg"))
-        assertTrue(svg.contains("Legend"))
+        assertThat(svg).contains("<svg")
+        assertThat(svg).contains("Legend")
     }
 
     @Test
     fun `analyze fails when neither coverage-report nor coverage-reports is given`() {
-        val ex = assertFailsWith<IllegalArgumentException> {
-            main(
-                arrayOf(
-                    "analyze",
-                    "--project-name", "invalid",
-                    "--source-roots", "src/main/kotlin",
-                    "--complexity-report", "complexity.json",
-                    "--output-json", "build/out.json"
-                )
-            )
+        var exitCode = 0
+        val err = captureStderr {
+            val ex = try {
+                runMain(
+                    arrayOf(
+                        "analyze",
+                        "--project-name", "invalid",
+                        "--source-roots", "src/main/kotlin",
+                        "--complexity-report", "complexity.json",
+                        "--output-json", "build/out.json"
+                    )
+                ) { code -> throw ExitCalled(code) }
+                throw IllegalStateException("Expected ExitCalled")
+            } catch (exception: Exception) {
+                exception
+            }
+            assertThat(ex).isInstanceOf(ExitCalled::class)
+            exitCode = (ex as ExitCalled).code
         }
-        assertEquals("Missing required option --coverage-report or --coverage-reports", ex.message)
+
+        assertThat(exitCode).isEqualTo(-1)
+        assertThat(err).contains("Missing required option --coverage-report or --coverage-reports")
     }
 
     private fun captureStdout(block: () -> Unit): String {
@@ -180,5 +202,19 @@ class MainTest {
         return baos.toString()
     }
 
+    private fun captureStderr(block: () -> Unit): String {
+        val original = System.err
+        val baos = ByteArrayOutputStream()
+        try {
+            System.setErr(PrintStream(baos))
+            block()
+        } finally {
+            System.setErr(original)
+        }
+        return baos.toString()
+    }
+
     private fun normalize(path: String): String = path.replace('\\', '/')
 }
+
+private class ExitCalled(val code: Int) : RuntimeException()

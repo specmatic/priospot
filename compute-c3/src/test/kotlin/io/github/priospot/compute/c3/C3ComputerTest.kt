@@ -1,13 +1,15 @@
 package io.github.priospot.compute.c3
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEmpty
+import assertk.assertions.isTrue
 import io.github.priospot.model.FileEntry
 import io.github.priospot.model.IntegerMetric
 import io.github.priospot.model.MetricNames
 import io.github.priospot.model.Project
 import io.github.priospot.model.RatioMetric
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
 
 class C3ComputerTest {
     private val c3 = C3Computer()
@@ -37,8 +39,8 @@ class C3ComputerTest {
 
         val c3Metric = result.project.files.single().metrics.first { it.name == MetricNames.C3_INDICATOR }
         val value = (c3Metric as io.github.priospot.model.DecimalMetric).value
-        assertTrue(value in 0.0..1.0)
-        assertEquals(1, result.filesComputed)
+        assertThat(value in 0.0..1.0).isTrue()
+        assertThat(result.filesComputed).isEqualTo(1)
     }
 
     @Test
@@ -52,7 +54,7 @@ class C3ComputerTest {
 
         val result = c3.compute(project, churnDays = 30)
 
-        assertEquals(0, result.filesComputed)
-        assertTrue(result.warnings.isNotEmpty())
+        assertThat(result.filesComputed).isEqualTo(0)
+        assertThat(result.warnings).isNotEmpty()
     }
 }

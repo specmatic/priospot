@@ -1,4 +1,6 @@
-plugins { kotlin("jvm") }
+plugins {
+    kotlin("jvm")
+}
 
 dependencies {
     implementation(project(":model"))
@@ -9,8 +11,9 @@ dependencies {
     implementation(project(":compute-c3"))
     implementation(project(":report-svg"))
     implementation(project(":compat-xml"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
-    testImplementation(kotlin("test"))
-}
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.1")
 
-tasks.test { useJUnitPlatform() }
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+}

@@ -137,20 +137,6 @@ Generate a single report from existing JSON:
   --output-svg build/reports/priospot/priospot-interactive-treemap.svg'
 ```
 
-## Modules
-
-- `model`: canonical `priospot.json` and `coverage.json` domain model
-- `ingest-source`: source file inventory
-- `ingest-churn`: git/baseline churn parser and indicators
-- `ingest-coverage`: coverage normalization and merge
-- `ingest-complexity`: complexity adapters and merge
-- `compute-c3`: exact C3 formula implementation
-- `report-svg`: interactive treemap SVG generator
-- `engine`: orchestration pipeline and outputs
-- `gradle-plugin`: host integration exposing a `priospot` task
-- `cli`: optional `priospot` CLI (`analyze`, `report`)
-- `compat-xml`: optional compatibility `panopticode.xml` exporter
-
 ## Config File Keys
 
 Supported keys (for host integrations):
@@ -219,3 +205,21 @@ node examples/node-wrapper/run-priospot.mjs analyze --help
 Canonical schema is available at:
 
 - `schema/priospot.schema.json`
+
+## Development
+
+This section is for contributors and maintainers working on PrioSpot internals.
+
+### Modules
+
+- `model`: canonical `priospot.json` and `coverage.json` domain model
+- `ingest-source`: source file inventory
+- `ingest-churn`: git/baseline churn parser and indicators
+- `ingest-coverage`: coverage normalization and merge
+- `ingest-complexity`: complexity adapters and merge
+- `compute-c3`: exact C3 formula implementation
+- `report-svg`: interactive treemap SVG generator
+- `engine`: orchestration pipeline and outputs
+- `gradle-plugin`: host integration exposing a `priospot` task
+- `cli`: optional `priospot` CLI (`analyze`, `report`)
+- `compat-xml`: optional compatibility `panopticode.xml` exporter

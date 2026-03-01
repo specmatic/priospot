@@ -2,6 +2,7 @@ package io.github.priospot.gradle
 
 import io.github.priospot.engine.PriospotConfig
 import io.github.priospot.engine.PriospotEngine
+import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -9,15 +10,9 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskProvider
-import javax.inject.Inject
+import org.gradle.api.tasks.*
 import java.io.File
+import javax.inject.Inject
 
 abstract class PriospotExtension @Inject constructor(objects: ObjectFactory) {
     val projectName: Property<String> = objects.property(String::class.java)
@@ -132,29 +127,28 @@ class PriospotPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("priospot", PriospotExtension::class.java)
 
-        val task: TaskProvider<PriospotTask> = project.tasks.register("priospot", PriospotTask::class.java)
-        task.configure { t ->
-            t.group = "verification"
-            t.description = "Computes C3 hotspots and generates PrioSpot reports"
+        val task: TaskProvider<PriospotTask> = project.tasks.register("priospot", PriospotTask::class.java) {
+            group = "verification"
+            description = "Computes C3 hotspots and generates PrioSpot reports"
 
-            t.projectName.set(extension.projectName.orElse(project.name))
-            t.projectVersion.set(extension.projectVersion.orElse(project.version.toString()))
-            t.sourceRoots.set(extension.sourceRoots.orElse(emptyList()))
-            t.coverageReports.set(extension.coverageReports)
-            t.complexityReports.set(extension.complexityReports)
-            t.churnDays.set(extension.churnDays)
-            t.churnLog.set(extension.churnLog)
-            t.outputDir.set(extension.outputDir.orElse(project.layout.buildDirectory.dir("reports/priospot")))
-            t.emitCompatibilityXml.set(extension.emitCompatibilityXml)
-            t.deterministicTimestamp.set(extension.deterministicTimestamp)
+            projectName.set(extension.projectName.orElse(project.name))
+            projectVersion.set(extension.projectVersion.orElse(project.version.toString()))
+            sourceRoots.set(extension.sourceRoots.orElse(emptyList()))
+            coverageReports.set(extension.coverageReports)
+            complexityReports.set(extension.complexityReports)
+            churnDays.set(extension.churnDays)
+            churnLog.set(extension.churnLog)
+            outputDir.set(extension.outputDir.orElse(project.layout.buildDirectory.dir("reports/priospot")))
+            emitCompatibilityXml.set(extension.emitCompatibilityXml)
+            deterministicTimestamp.set(extension.deterministicTimestamp)
         }
 
         project.afterEvaluate {
             extension.coverageTask.orNull?.let { coverageTaskName ->
-                task.configure { t -> t.dependsOn(project.tasks.named(coverageTaskName)) }
+                task.configure { dependsOn(project.tasks.named(coverageTaskName)) }
             }
             extension.complexityTask.orNull?.let { complexityTaskName ->
-                task.configure { t -> t.dependsOn(project.tasks.named(complexityTaskName)) }
+                task.configure { dependsOn(project.tasks.named(complexityTaskName)) }
             }
         }
     }

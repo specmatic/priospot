@@ -1,10 +1,11 @@
 package io.github.priospot.ingest.complexity
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
 import java.nio.file.Files
+import org.junit.jupiter.api.Test
 import kotlin.io.path.createTempDirectory
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class KotlinSourceComplexityAnalyzerTest {
     @Test
@@ -34,9 +35,9 @@ class KotlinSourceComplexityAnalyzerTest {
         )
 
         val result = KotlinSourceComplexityAnalyzer().analyze(file)
-        assertNotNull(result)
-        assertEquals(14, result.ncss)
-        assertEquals(3, result.maxCcn)
+        assertThat(result).isNotNull()
+        assertThat(result?.ncss).isEqualTo(14)
+        assertThat(result?.maxCcn).isEqualTo(3)
     }
 
     @Test
@@ -57,7 +58,7 @@ class KotlinSourceComplexityAnalyzerTest {
         )
 
         val result = KotlinSourceComplexityAnalyzer().analyze(file)
-        assertNotNull(result)
-        assertEquals(1, result.maxCcn)
+        assertThat(result).isNotNull()
+        assertThat(result?.maxCcn).isEqualTo(1)
     }
 }

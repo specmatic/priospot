@@ -1,9 +1,10 @@
 package io.github.priospot.ingest.complexity
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import java.nio.file.Files
+import org.junit.jupiter.api.Test
 import kotlin.io.path.createTempDirectory
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ComplexityImporterTest {
     private val importer = ComplexityImporter()
@@ -27,9 +28,9 @@ class ComplexityImporterTest {
 
         val parsed = importer.parse(xml)
 
-        assertEquals(1, parsed.size)
-        assertEquals(7, parsed.single().maxCcn)
-        assertEquals(20, parsed.single().ncss)
+        assertThat(parsed.size).isEqualTo(1)
+        assertThat(parsed.single().maxCcn).isEqualTo(7)
+        assertThat(parsed.single().ncss).isEqualTo(20)
     }
 
     @Test
@@ -50,9 +51,9 @@ class ComplexityImporterTest {
 
         val parsed = importer.parse(xml)
 
-        assertEquals(1, parsed.size)
-        assertEquals("src/main/kotlin/com/example/Foo.kt", parsed.single().path)
-        assertEquals(20, parsed.single().maxCcn)
-        assertEquals(69, parsed.single().ncss)
+        assertThat(parsed.size).isEqualTo(1)
+        assertThat(parsed.single().path).isEqualTo("src/main/kotlin/com/example/Foo.kt")
+        assertThat(parsed.single().maxCcn).isEqualTo(20)
+        assertThat(parsed.single().ncss).isEqualTo(69)
     }
 }
