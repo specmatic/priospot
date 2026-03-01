@@ -1,23 +1,19 @@
 package io.github.priospot.ingest.complexity
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.priospot.model.IntegerMetric
 import io.github.priospot.model.Metric
 import io.github.priospot.model.MetricNames
 import io.github.priospot.model.ModelJson
 import io.github.priospot.model.Project
 import io.github.priospot.model.sortedMetrics
-import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.xml.parsers.DocumentBuilderFactory
-import org.w3c.dom.Element
 import kotlin.math.max
+import org.w3c.dom.Element
 
-data class FileComplexity(
-    val path: String,
-    val ncss: Int,
-    val maxCcn: Int
-)
+data class FileComplexity(val path: String, val ncss: Int, val maxCcn: Int)
 
 class ComplexityImporter {
     fun parse(reportPath: Path): List<FileComplexity> {
@@ -32,29 +28,29 @@ class ComplexityImporter {
     fun merge(project: Project, complexity: List<FileComplexity>): Project {
         val byPath = complexity.associateBy { it.path }
         val projectPaths = project.files.map { it.path }
-        val mergedFiles = project.files.map { file ->
-            val c = byPath[file.path]
-                ?: resolveBySuffix(byPath, projectPaths, file.path)
-                ?: return@map file
-            val update = listOf<Metric>(
-                IntegerMetric(MetricNames.NCSS, c.ncss),
-                IntegerMetric(MetricNames.MAX_CCN, c.maxCcn)
-            )
-            val map = file.metrics.associateBy { it.name }.toMutableMap()
-            update.forEach { map[it.name] = it }
-            file.copy(metrics = map.values.toList().sortedMetrics())
-        }
+        val mergedFiles =
+            project.files.map { file ->
+                val c =
+                    byPath[file.path]
+                        ?: resolveBySuffix(byPath, projectPaths, file.path)
+                        ?: return@map file
+                val update =
+                    listOf<Metric>(
+                        IntegerMetric(MetricNames.NCSS, c.ncss),
+                        IntegerMetric(MetricNames.MAX_CCN, c.maxCcn)
+                    )
+                val map = file.metrics.associateBy { it.name }.toMutableMap()
+                update.forEach { map[it.name] = it }
+                file.copy(metrics = map.values.toList().sortedMetrics())
+            }
         return project.copy(files = mergedFiles)
     }
 
-    private fun resolveBySuffix(
-        byPath: Map<String, FileComplexity>,
-        projectPaths: List<String>,
-        projectFilePath: String
-    ): FileComplexity? {
-        val candidates = byPath.entries.filter { (_, complexity) ->
-            projectFilePath == complexity.path || projectFilePath.endsWith("/${complexity.path}")
-        }
+    private fun resolveBySuffix(byPath: Map<String, FileComplexity>, projectPaths: List<String>, projectFilePath: String): FileComplexity? {
+        val candidates =
+            byPath.entries.filter { (_, complexity) ->
+                projectFilePath == complexity.path || projectFilePath.endsWith("/${complexity.path}")
+            }
         if (candidates.size != 1) {
             return null
         }
@@ -63,8 +59,7 @@ class ComplexityImporter {
         return if (collisions == 1) candidates.single().value else null
     }
 
-    private fun parseJson(reportPath: Path): List<FileComplexity> =
-        ModelJson.mapper.readValue(Files.readString(reportPath))
+    private fun parseJson(reportPath: Path): List<FileComplexity> = ModelJson.mapper.readValue(Files.readString(reportPath))
 
     private fun parseDetektLikeXml(reportPath: Path): List<FileComplexity> {
         val dbf = DocumentBuilderFactory.newInstance()
@@ -93,10 +88,12 @@ class ComplexityImporter {
                         val ccn = extractFirstInt(message, "complexity:\\s*(\\d+)") ?: 1
                         current.maxCcn = max(current.maxCcn, ccn)
                     }
+
                     source.contains("LongMethod", ignoreCase = true) -> {
                         val longMethod = extractFirstInt(message, "too long\\s*\\((\\d+)\\)") ?: 1
                         current.ncss += longMethod
                     }
+
                     source.contains("LargeClass", ignoreCase = true) ||
                         source.contains("TooManyFunctions", ignoreCase = true) ||
                         source.contains("ComplexCondition", ignoreCase = true) -> {
@@ -121,6 +118,7 @@ class ComplexityImporter {
                     val ccn = node.getAttribute("metric").toIntOrNull() ?: 1
                     current.maxCcn = max(current.maxCcn, ccn)
                 }
+
                 issue.contains("LongMethod", ignoreCase = true) ||
                     issue.contains("LargeClass", ignoreCase = true) ||
                     issue.contains("ComplexCondition", ignoreCase = true) -> {
@@ -135,14 +133,14 @@ class ComplexityImporter {
         }
     }
 
-    private class MutableComplexity(
-        var ncss: Int = 0,
-        var maxCcn: Int = 0,
-        var maxObservedLine: Int = 1
-    )
+    private class MutableComplexity(var ncss: Int = 0, var maxCcn: Int = 0, var maxObservedLine: Int = 1)
 
     private fun extractFirstInt(text: String, pattern: String): Int? {
         val regex = Regex(pattern)
-        return regex.find(text)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        return regex
+            .find(text)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.toIntOrNull()
     }
 }

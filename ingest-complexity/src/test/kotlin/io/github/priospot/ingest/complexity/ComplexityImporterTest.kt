@@ -3,8 +3,8 @@ package io.github.priospot.ingest.complexity
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import java.nio.file.Files
-import org.junit.jupiter.api.Test
 import kotlin.io.path.createTempDirectory
+import org.junit.jupiter.api.Test
 
 class ComplexityImporterTest {
     private val importer = ComplexityImporter()

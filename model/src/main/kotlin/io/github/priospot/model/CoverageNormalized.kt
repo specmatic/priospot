@@ -34,10 +34,7 @@ data class CoverageMethod(
     val branchCoverage: CoverageCounter? = null
 )
 
-data class CoverageCounter(
-    val covered: Int,
-    val total: Int
-) {
+data class CoverageCounter(val covered: Int, val total: Int) {
     init {
         require(covered >= 0) { "covered must be >= 0" }
         require(total >= 0) { "total must be >= 0" }
@@ -46,14 +43,16 @@ data class CoverageCounter(
 }
 
 fun CoverageDocument.sortedDeterministic(): CoverageDocument = copy(
-    files = files.sortedBy { normalizePath(it.path) }.map { file ->
-        file.copy(
-            path = normalizePath(file.path),
-            classes = file.classes.sortedBy { it.name }.map { klass ->
-                klass.copy(
-                    methods = klass.methods.sortedBy { it.signature ?: it.name }
-                )
-            }
-        )
-    }
+    files =
+        files.sortedBy { normalizePath(it.path) }.map { file ->
+            file.copy(
+                path = normalizePath(file.path),
+                classes =
+                    file.classes.sortedBy { it.name }.map { klass ->
+                        klass.copy(
+                            methods = klass.methods.sortedBy { it.signature ?: it.name }
+                        )
+                    }
+            )
+        }
 )

@@ -5,16 +5,16 @@ import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
-import io.github.priospot.model.ModelJson
 import io.github.priospot.model.IntegerMetric
+import io.github.priospot.model.ModelJson
 import io.github.priospot.model.PanopticodeDocument
 import io.github.priospot.model.RatioMetric
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class MainTest {
     @TempDir
@@ -77,18 +77,23 @@ class MainTest {
         val outputJson = tempDir.resolve("out/priospot.json")
         assertThat(
             runCli(
-            arrayOf(
-                "analyze",
-                "--project-name", "cli-test",
-                "--source-roots", normalize(sourceRoot.toAbsolutePath().toString()),
-                "--coverage-reports", listOf(coverage1, coverage2).joinToString(",") {
-                    normalize(it.toAbsolutePath().toString())
-                },
-                "--complexity-reports", listOf(complexity1, complexity2).joinToString(",") {
-                    normalize(it.toAbsolutePath().toString())
-                },
-                "--output-json", normalize(outputJson.toAbsolutePath().toString())
-            )
+                arrayOf(
+                    "analyze",
+                    "--project-name",
+                    "cli-test",
+                    "--source-roots",
+                    normalize(sourceRoot.toAbsolutePath().toString()),
+                    "--coverage-reports",
+                    listOf(coverage1, coverage2).joinToString(",") {
+                        normalize(it.toAbsolutePath().toString())
+                    },
+                    "--complexity-reports",
+                    listOf(complexity1, complexity2).joinToString(",") {
+                        normalize(it.toAbsolutePath().toString())
+                    },
+                    "--output-json",
+                    normalize(outputJson.toAbsolutePath().toString())
+                )
             )
         ).isEqualTo(0)
 
@@ -137,24 +142,32 @@ class MainTest {
 
         assertThat(
             runCli(
-            arrayOf(
-                "analyze",
-                "--project-name", "cli-report-test",
-                "--source-roots", normalize(sourceRoot.toAbsolutePath().toString()),
-                "--coverage-report", normalize(coverage.toAbsolutePath().toString()),
-                "--complexity-report", normalize(complexity.toAbsolutePath().toString()),
-                "--output-json", normalize(outputJson.toAbsolutePath().toString())
-            )
+                arrayOf(
+                    "analyze",
+                    "--project-name",
+                    "cli-report-test",
+                    "--source-roots",
+                    normalize(sourceRoot.toAbsolutePath().toString()),
+                    "--coverage-report",
+                    normalize(coverage.toAbsolutePath().toString()),
+                    "--complexity-report",
+                    normalize(complexity.toAbsolutePath().toString()),
+                    "--output-json",
+                    normalize(outputJson.toAbsolutePath().toString())
+                )
             )
         ).isEqualTo(0)
         assertThat(
             runCli(
-            arrayOf(
-                "report",
-                "--input-json", normalize(outputJson.toAbsolutePath().toString()),
-                "--type", "priospot",
-                "--output-svg", normalize(outputSvg.toAbsolutePath().toString())
-            )
+                arrayOf(
+                    "report",
+                    "--input-json",
+                    normalize(outputJson.toAbsolutePath().toString()),
+                    "--type",
+                    "priospot",
+                    "--output-svg",
+                    normalize(outputSvg.toAbsolutePath().toString())
+                )
             )
         ).isEqualTo(0)
 
@@ -167,24 +180,30 @@ class MainTest {
     @Test
     fun `analyze fails when neither coverage-report nor coverage-reports is given`() {
         var exitCode = 0
-        val err = captureStderr {
-            val ex = try {
-                runMain(
-                    arrayOf(
-                        "analyze",
-                        "--project-name", "invalid",
-                        "--source-roots", "src/main/kotlin",
-                        "--complexity-report", "complexity.json",
-                        "--output-json", "build/out.json"
-                    )
-                ) { code -> throw ExitCalled(code) }
-                throw IllegalStateException("Expected ExitCalled")
-            } catch (exception: Exception) {
-                exception
+        val err =
+            captureStderr {
+                val ex =
+                    try {
+                        runMain(
+                            arrayOf(
+                                "analyze",
+                                "--project-name",
+                                "invalid",
+                                "--source-roots",
+                                "src/main/kotlin",
+                                "--complexity-report",
+                                "complexity.json",
+                                "--output-json",
+                                "build/out.json"
+                            )
+                        ) { code -> throw ExitCalled(code) }
+                        throw IllegalStateException("Expected ExitCalled")
+                    } catch (exception: Exception) {
+                        exception
+                    }
+                assertThat(ex).isInstanceOf(ExitCalled::class)
+                exitCode = (ex as ExitCalled).code
             }
-            assertThat(ex).isInstanceOf(ExitCalled::class)
-            exitCode = (ex as ExitCalled).code
-        }
 
         assertThat(exitCode).isEqualTo(-1)
         assertThat(err).contains("Missing required option --coverage-report or --coverage-reports")

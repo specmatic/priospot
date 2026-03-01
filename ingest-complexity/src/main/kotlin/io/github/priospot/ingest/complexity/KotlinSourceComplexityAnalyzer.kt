@@ -3,10 +3,7 @@ package io.github.priospot.ingest.complexity
 import java.nio.file.Files
 import java.nio.file.Path
 
-data class KotlinFileComplexity(
-    val ncss: Int,
-    val maxCcn: Int
-)
+data class KotlinFileComplexity(val ncss: Int, val maxCcn: Int)
 
 class KotlinSourceComplexityAnalyzer {
     fun analyze(filePath: Path): KotlinFileComplexity? {
@@ -20,11 +17,10 @@ class KotlinSourceComplexityAnalyzer {
         return KotlinFileComplexity(ncss = ncss.coerceAtLeast(1), maxCcn = maxCcn.coerceAtLeast(1))
     }
 
-    private fun computeNcss(source: String): Int =
-        source
-            .lineSequence()
-            .map(String::trim)
-            .count { line -> line.isNotEmpty() }
+    private fun computeNcss(source: String): Int = source
+        .lineSequence()
+        .map(String::trim)
+        .count { line -> line.isNotEmpty() }
 
     private fun computeMaxCcn(source: String): Int {
         val functionToken = Regex("""\bfun\b""")

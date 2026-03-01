@@ -4,10 +4,10 @@ import io.github.priospot.model.ModelJson
 import io.github.priospot.model.PanopticodeDocument
 import io.github.priospot.report.svg.ReportType
 import io.github.priospot.report.svg.SvgTreemapReporter
-import picocli.CommandLine
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Callable
+import picocli.CommandLine
 
 @CommandLine.Command(
     name = "report",

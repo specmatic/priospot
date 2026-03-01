@@ -2,12 +2,12 @@ package io.github.priospot.cli
 
 import io.github.priospot.engine.PriospotConfig
 import io.github.priospot.engine.PriospotEngine
-import picocli.CommandLine
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.Callable
 import kotlin.io.path.absolute
+import picocli.CommandLine
 
 @CommandLine.Command(
     name = "analyze",

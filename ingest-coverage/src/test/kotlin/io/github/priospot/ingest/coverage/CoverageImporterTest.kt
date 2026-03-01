@@ -3,8 +3,8 @@ package io.github.priospot.ingest.coverage
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import java.nio.file.Files
-import org.junit.jupiter.api.Test
 import kotlin.io.path.createTempDirectory
+import org.junit.jupiter.api.Test
 
 class CoverageImporterTest {
     private val importer = CoverageImporter()
@@ -29,8 +29,16 @@ class CoverageImporterTest {
         val doc = importer.normalizeCoverageReport(xml)
 
         assertThat(doc.files.single().path).isEqualTo("com/example/Foo.kt")
-        assertThat(doc.files.single().lineCoverage.covered).isEqualTo(80)
-        assertThat(doc.files.single().lineCoverage.total).isEqualTo(100)
+        assertThat(
+            doc.files
+                .single()
+                .lineCoverage.covered
+        ).isEqualTo(80)
+        assertThat(
+            doc.files
+                .single()
+                .lineCoverage.total
+        ).isEqualTo(100)
     }
 
     @Test
@@ -55,7 +63,15 @@ class CoverageImporterTest {
         val doc = importer.normalizeCoverageReport(xml)
 
         assertThat(doc.files.single().path).isEqualTo("com/example/Foo.kt")
-        assertThat(doc.files.single().lineCoverage.covered).isEqualTo(80)
-        assertThat(doc.files.single().lineCoverage.total).isEqualTo(100)
+        assertThat(
+            doc.files
+                .single()
+                .lineCoverage.covered
+        ).isEqualTo(80)
+        assertThat(
+            doc.files
+                .single()
+                .lineCoverage.total
+        ).isEqualTo(100)
     }
 }

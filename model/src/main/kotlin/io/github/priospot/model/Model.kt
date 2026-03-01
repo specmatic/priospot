@@ -9,11 +9,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.time.Instant
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class PanopticodeDocument(
-    val schemaVersion: Int = 1,
-    val generatedAt: String,
-    val project: Project
-)
+data class PanopticodeDocument(val schemaVersion: Int = 1, val generatedAt: String, val project: Project)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class Project(
@@ -26,16 +22,9 @@ data class Project(
     val packages: List<PackageEntry> = emptyList()
 )
 
-data class SupplementDeclaration(
-    val name: String,
-    val description: String
-)
+data class SupplementDeclaration(val name: String, val description: String)
 
-data class PackageEntry(
-    val name: String,
-    val metrics: List<Metric> = emptyList(),
-    val files: List<FileEntry> = emptyList()
-)
+data class PackageEntry(val name: String, val metrics: List<Metric> = emptyList(), val files: List<FileEntry> = emptyList())
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class FileEntry(
@@ -73,17 +62,9 @@ data class ArgumentEntry(
     val isVarArg: Boolean
 )
 
-data class Position(
-    val line: Int,
-    val column: Int
-)
+data class Position(val line: Int, val column: Int)
 
-data class ClassFlags(
-    val isAbstract: Boolean,
-    val isInterface: Boolean,
-    val isEnum: Boolean,
-    val isStatic: Boolean
-)
+data class ClassFlags(val isAbstract: Boolean, val isInterface: Boolean, val isEnum: Boolean, val isStatic: Boolean)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
 @JsonSubTypes(
@@ -95,21 +76,11 @@ sealed interface Metric {
     val name: String
 }
 
-data class IntegerMetric(
-    override val name: String,
-    val value: Int
-) : Metric
+data class IntegerMetric(override val name: String, val value: Int) : Metric
 
-data class DecimalMetric(
-    override val name: String,
-    val value: Double
-) : Metric
+data class DecimalMetric(override val name: String, val value: Double) : Metric
 
-data class RatioMetric(
-    override val name: String,
-    val numerator: Double,
-    val denominator: Double
-) : Metric {
+data class RatioMetric(override val name: String, val numerator: Double, val denominator: Double) : Metric {
     fun safeRatio(): Double = if (denominator <= 0.0) 0.0 else numerator / denominator
 }
 
@@ -129,10 +100,11 @@ object MetricNames {
 }
 
 object ModelJson {
-    val mapper: ObjectMapper = ObjectMapper()
-        .registerKotlinModule()
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .enable(SerializationFeature.INDENT_OUTPUT)
+    val mapper: ObjectMapper =
+        ObjectMapper()
+            .registerKotlinModule()
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .enable(SerializationFeature.INDENT_OUTPUT)
 }
 
 fun nowIsoTimestamp(): String = Instant.now().toString()
@@ -143,14 +115,16 @@ fun List<Metric>.sortedMetrics(): List<Metric> = sortedBy { it.name }
 
 fun FileEntry.sortedDeep(): FileEntry = copy(
     metrics = metrics.sortedMetrics(),
-    classes = classes.sortedBy { it.fullyQualifiedName }.map { classEntry ->
-        classEntry.copy(
-            metrics = classEntry.metrics.sortedMetrics(),
-            methods = classEntry.methods.sortedBy { it.fullyQualifiedName }.map { methodEntry ->
-                methodEntry.copy(metrics = methodEntry.metrics.sortedMetrics())
-            }
-        )
-    }
+    classes =
+        classes.sortedBy { it.fullyQualifiedName }.map { classEntry ->
+            classEntry.copy(
+                metrics = classEntry.metrics.sortedMetrics(),
+                methods =
+                    classEntry.methods.sortedBy { it.fullyQualifiedName }.map { methodEntry ->
+                        methodEntry.copy(metrics = methodEntry.metrics.sortedMetrics())
+                    }
+            )
+        }
 )
 
 fun Project.sortedDeep(): Project = copy(

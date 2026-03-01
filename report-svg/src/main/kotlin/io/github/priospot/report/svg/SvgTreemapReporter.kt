@@ -19,12 +19,7 @@ enum class ReportType {
 }
 
 class SvgTreemapReporter {
-    private data class Rect(
-        val x: Double,
-        val y: Double,
-        val width: Double,
-        val height: Double
-    )
+    private data class Rect(val x: Double, val y: Double, val width: Double, val height: Double)
 
     private sealed interface TreeItem {
         val label: String
@@ -40,18 +35,12 @@ class SvgTreemapReporter {
             get() = files.sumOf { fileWeight(it) } + children.values.sumOf { it.weight }
     }
 
-    private data class FileLeaf(
-        val file: FileEntry
-    ) : TreeItem {
+    private data class FileLeaf(val file: FileEntry) : TreeItem {
         override val label: String get() = file.name
         override val weight: Double get() = fileWeight(file)
     }
 
-    private data class LegendItem(
-        val label: String,
-        val fill: String,
-        val stroke: String = "#111"
-    )
+    private data class LegendItem(val label: String, val fill: String, val stroke: String = "#111")
 
     fun generateInteractiveTreemap(project: Project, type: ReportType, output: Path) {
         val width = 1600.0
@@ -86,7 +75,8 @@ class SvgTreemapReporter {
             fileElements = nonTestFileElements
         )
 
-        val content = """
+        val content =
+            """
 <svg xmlns="http://www.w3.org/2000/svg" width="${width.toInt()}" height="${height.toInt()}" viewBox="0 0 ${width.toInt()} ${height.toInt()}">
   <style>
     .treemap-cell { cursor: pointer; }
@@ -271,7 +261,7 @@ class SvgTreemapReporter {
     applyTestClassFilter();
   ]]></script>
 </svg>
-        """.trimIndent()
+            """.trimIndent()
 
         Files.createDirectories(output.parent)
         Files.writeString(output, content)
@@ -309,27 +299,32 @@ class SvgTreemapReporter {
         }
 
         val headerHeight = 0.0
-        val contentRect = if (headerHeight > 0 && rect.height > headerHeight + 2) {
-            Rect(insetRect.x, insetRect.y + headerHeight, insetRect.width, insetRect.height - headerHeight)
-        } else {
-            insetRect
-        }
+        val contentRect =
+            if (headerHeight > 0 && rect.height > headerHeight + 2) {
+                Rect(insetRect.x, insetRect.y + headerHeight, insetRect.width, insetRect.height - headerHeight)
+            } else {
+                insetRect
+            }
 
         if (depth > 0) {
-            val stroke = when (depth % 4) {
-                0 -> "#888"
-                1 -> "#777"
-                2 -> "#666"
-                else -> "#555"
-            }
+            val stroke =
+                when (depth % 4) {
+                    0 -> "#888"
+                    1 -> "#777"
+                    2 -> "#666"
+                    else -> "#555"
+                }
             val packageName = packageKey.ifBlank { node.label }
-            packageOverlayElements += """
+            packageOverlayElements +=
+                """
 <g>
-  <rect class="package-box" x="${insetRect.x}" y="${insetRect.y}" width="${insetRect.width}" height="${insetRect.height}" fill="none" stroke="$stroke" stroke-width="1.4" data-package-key="${escape(packageKey)}" data-stroke="$stroke" pointer-events="none">
+  <rect class="package-box" x="${insetRect.x}" y="${insetRect.y}" width="${insetRect.width}" height="${insetRect.height}" fill="none" stroke="$stroke" stroke-width="1.4" data-package-key="${escape(
+                    packageKey
+                )}" data-stroke="$stroke" pointer-events="none">
     <title>${escape(packageName)}</title>
   </rect>
 </g>
-            """.trimIndent()
+                """.trimIndent()
         }
 
         val items = mutableListOf<TreeItem>()
@@ -343,7 +338,10 @@ class SvgTreemapReporter {
                     val childPackageKey = if (packageKey.isBlank()) item.label else "$packageKey/${item.label}"
                     renderNode(item, subRect, depth + 1, childPackageKey, reportType, packageOverlayElements, fileElements)
                 }
-                is FileLeaf -> fileElements += renderFile(item.file, subRect, packageKey, reportType)
+
+                is FileLeaf -> {
+                    fileElements += renderFile(item.file, subRect, packageKey, reportType)
+                }
             }
         }
     }
@@ -357,11 +355,18 @@ class SvgTreemapReporter {
         }
 
         val idx = normalized.indexOf(marker)
-        val modulePrefix = normalized.substring(0, idx).trim('/').split('/').filter { it.isNotBlank() }
-        val packageTail = normalized.substring(idx + marker.length)
-            .split('/')
-            .dropLast(1)
-            .filter { it.isNotBlank() }
+        val modulePrefix =
+            normalized
+                .substring(0, idx)
+                .trim('/')
+                .split('/')
+                .filter { it.isNotBlank() }
+        val packageTail =
+            normalized
+                .substring(idx + marker.length)
+                .split('/')
+                .dropLast(1)
+                .filter { it.isNotBlank() }
         return modulePrefix + packageTail
     }
 
@@ -423,11 +428,17 @@ class SvgTreemapReporter {
 
         return """
 <g>
-  <rect class="treemap-cell" x="${drawRect.x}" y="${drawRect.y}" width="${drawRect.width}" height="${drawRect.height}" fill="$fill" stroke="$stroke" stroke-width="1" data-file="${escape(file.path)}" data-primary="${escape(primaryDisplay)}" data-metrics="${escape(allMetricsDisplay)}" data-package-key="${escape(packageKey)}" data-stroke="$stroke" onclick="showDetails(this)">
+  <rect class="treemap-cell" x="${drawRect.x}" y="${drawRect.y}" width="${drawRect.width}" height="${drawRect.height}" fill="$fill" stroke="$stroke" stroke-width="1" data-file="${escape(
+            file.path
+        )}" data-primary="${escape(
+            primaryDisplay
+        )}" data-metrics="${escape(
+            allMetricsDisplay
+        )}" data-package-key="${escape(packageKey)}" data-stroke="$stroke" onclick="showDetails(this)">
     <title>$title</title>
   </rect>
 </g>
-        """.trimIndent()
+            """.trimIndent()
     }
 
     private fun metricForType(file: FileEntry, type: ReportType): Metric? = when (type) {
@@ -446,10 +457,24 @@ class SvgTreemapReporter {
     private fun metricToDisplayOrNa(metric: Metric?): String = metric?.let { metricToDisplay(it) } ?: "metric: n/a"
 
     private fun colorAndStrokeFor(file: FileEntry, type: ReportType): Pair<String, String> = when (type) {
-        ReportType.PRIOSPOT -> c3ColorAndStroke((file.metrics.firstOrNull { it.name == MetricNames.C3_INDICATOR } as? DecimalMetric)?.value)
-        ReportType.COVERAGE -> coverageColor((file.metrics.firstOrNull { it.name == MetricNames.LINE_COVERAGE } as? RatioMetric)?.safeRatio()) to "#111"
-        ReportType.COMPLEXITY -> genericScale((file.metrics.firstOrNull { it.name == MetricNames.MAX_CCN } as? IntegerMetric)?.value?.toDouble(), 30.0) to "#111"
-        ReportType.CHURN -> genericScale((file.metrics.firstOrNull { it.name == MetricNames.TIMES_CHANGED } as? IntegerMetric)?.value?.toDouble(), 25.0) to "#111"
+        ReportType.PRIOSPOT -> {
+            c3ColorAndStroke((file.metrics.firstOrNull { it.name == MetricNames.C3_INDICATOR } as? DecimalMetric)?.value)
+        }
+
+        ReportType.COVERAGE -> {
+            coverageColor((file.metrics.firstOrNull { it.name == MetricNames.LINE_COVERAGE } as? RatioMetric)?.safeRatio()) to
+                "#111"
+        }
+
+        ReportType.COMPLEXITY -> {
+            genericScale((file.metrics.firstOrNull { it.name == MetricNames.MAX_CCN } as? IntegerMetric)?.value?.toDouble(), 30.0) to
+                "#111"
+        }
+
+        ReportType.CHURN -> {
+            genericScale((file.metrics.firstOrNull { it.name == MetricNames.TIMES_CHANGED } as? IntegerMetric)?.value?.toDouble(), 25.0) to
+                "#111"
+        }
     }
 
     private fun c3ColorAndStroke(c3: Double?): Pair<String, String> {
@@ -495,35 +520,47 @@ class SvgTreemapReporter {
         items.forEachIndexed { index, item ->
             val y = yStart + 18 + (index * 24)
             elements += """<rect x="$x" y="$y" width="14" height="14" fill="${item.fill}" stroke="${item.stroke}" stroke-width="1"/>"""
-            elements += """<text x="${x + 22}" y="${y + 11}" font-family="monospace" font-size="12" fill="#222">${escape(item.label)}</text>"""
+            elements +=
+                """<text x="${x + 22}" y="${y + 11}" font-family="monospace" font-size="12" fill="#222">${escape(item.label)}</text>"""
         }
         return elements
     }
 
     private fun legendItemsFor(type: ReportType): List<LegendItem> = when (type) {
-        ReportType.PRIOSPOT -> listOf(
-            LegendItem("C3 < 0.30 (Good)", "#2e7d32"),
-            LegendItem("0.30 <= C3 < 0.60 (Watch)", "#f9a825"),
-            LegendItem("0.60 <= C3 < 0.90 (Risk)", "#c62828"),
-            LegendItem("C3 >= 0.90 (Critical)", "#000000", "#ff0000"),
-            LegendItem("Metric missing", "#b0b0b0")
-        )
-        ReportType.COVERAGE -> listOf(
-            LegendItem("Coverage >= 80%", "#2e7d32"),
-            LegendItem("50% <= Coverage < 80%", "#f9a825"),
-            LegendItem("Coverage < 50%", "#c62828"),
-            LegendItem("Metric missing", "#b0b0b0")
-        )
-        ReportType.COMPLEXITY -> listOf(
-            LegendItem("Lower complexity", genericScale(0.0, 30.0)),
-            LegendItem("Medium complexity", genericScale(15.0, 30.0)),
-            LegendItem("Higher complexity", genericScale(30.0, 30.0))
-        )
-        ReportType.CHURN -> listOf(
-            LegendItem("Lower churn", genericScale(0.0, 25.0)),
-            LegendItem("Medium churn", genericScale(12.5, 25.0)),
-            LegendItem("Higher churn", genericScale(25.0, 25.0))
-        )
+        ReportType.PRIOSPOT -> {
+            listOf(
+                LegendItem("C3 < 0.30 (Good)", "#2e7d32"),
+                LegendItem("0.30 <= C3 < 0.60 (Watch)", "#f9a825"),
+                LegendItem("0.60 <= C3 < 0.90 (Risk)", "#c62828"),
+                LegendItem("C3 >= 0.90 (Critical)", "#000000", "#ff0000"),
+                LegendItem("Metric missing", "#b0b0b0")
+            )
+        }
+
+        ReportType.COVERAGE -> {
+            listOf(
+                LegendItem("Coverage >= 80%", "#2e7d32"),
+                LegendItem("50% <= Coverage < 80%", "#f9a825"),
+                LegendItem("Coverage < 50%", "#c62828"),
+                LegendItem("Metric missing", "#b0b0b0")
+            )
+        }
+
+        ReportType.COMPLEXITY -> {
+            listOf(
+                LegendItem("Lower complexity", genericScale(0.0, 30.0)),
+                LegendItem("Medium complexity", genericScale(15.0, 30.0)),
+                LegendItem("Higher complexity", genericScale(30.0, 30.0))
+            )
+        }
+
+        ReportType.CHURN -> {
+            listOf(
+                LegendItem("Lower churn", genericScale(0.0, 25.0)),
+                LegendItem("Medium churn", genericScale(12.5, 25.0)),
+                LegendItem("Higher churn", genericScale(25.0, 25.0))
+            )
+        }
     }
 
     private fun inset(rect: Rect, amount: Double): Rect {

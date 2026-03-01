@@ -12,11 +12,11 @@ import io.github.priospot.model.RatioMetric
 import io.github.priospot.model.normalizePath
 import io.github.priospot.model.sortedDeterministic
 import io.github.priospot.model.sortedMetrics
-import org.w3c.dom.Element
+import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
 import org.xml.sax.InputSource
 
 class CoverageImporter {
@@ -33,35 +33,35 @@ class CoverageImporter {
         val byPath = coverageDocument.files.associateBy { normalizePath(it.path) }
         val projectPaths = project.files.map { it.path }
 
-        val merged = project.files.map { file ->
-            val coverageFile = byPath[file.path]
-                ?: resolveBySuffix(byPath, projectPaths, file.path)
-                ?: return@map file
-            val metrics = mutableListOf<Metric>()
-            metrics += RatioMetric(
-                MetricNames.LINE_COVERAGE,
-                coverageFile.lineCoverage.covered.toDouble(),
-                coverageFile.lineCoverage.total.toDouble()
-            )
-            coverageFile.branchCoverage?.let {
-                metrics += RatioMetric(MetricNames.BRANCH_COVERAGE, it.covered.toDouble(), it.total.toDouble())
+        val merged =
+            project.files.map { file ->
+                val coverageFile =
+                    byPath[file.path]
+                        ?: resolveBySuffix(byPath, projectPaths, file.path)
+                        ?: return@map file
+                val metrics = mutableListOf<Metric>()
+                metrics +=
+                    RatioMetric(
+                        MetricNames.LINE_COVERAGE,
+                        coverageFile.lineCoverage.covered.toDouble(),
+                        coverageFile.lineCoverage.total.toDouble()
+                    )
+                coverageFile.branchCoverage?.let {
+                    metrics += RatioMetric(MetricNames.BRANCH_COVERAGE, it.covered.toDouble(), it.total.toDouble())
+                }
+                val map = file.metrics.associateBy { it.name }.toMutableMap()
+                metrics.forEach { map[it.name] = it }
+                file.copy(metrics = map.values.toList().sortedMetrics())
             }
-            val map = file.metrics.associateBy { it.name }.toMutableMap()
-            metrics.forEach { map[it.name] = it }
-            file.copy(metrics = map.values.toList().sortedMetrics())
-        }
 
         return project.copy(files = merged)
     }
 
-    private fun resolveBySuffix(
-        byPath: Map<String, CoverageFile>,
-        projectPaths: List<String>,
-        projectFilePath: String
-    ): CoverageFile? {
-        val candidates = byPath.entries.filter { (_, coverage) ->
-            projectFilePath == coverage.path || projectFilePath.endsWith("/${coverage.path}")
-        }
+    private fun resolveBySuffix(byPath: Map<String, CoverageFile>, projectPaths: List<String>, projectFilePath: String): CoverageFile? {
+        val candidates =
+            byPath.entries.filter { (_, coverage) ->
+                projectFilePath == coverage.path || projectFilePath.endsWith("/${coverage.path}")
+            }
         if (candidates.size != 1) {
             return null
         }
@@ -82,13 +82,17 @@ class CoverageImporter {
         builder.setEntityResolver { _, _ -> InputSource(StringReader("")) }
         val doc = builder.parse(reportPath.toFile())
         val root = doc.documentElement
-        val generated = java.time.Instant.now().toString()
+        val generated =
+            java.time.Instant
+                .now()
+                .toString()
 
-        val files = when (root.tagName.lowercase()) {
-            "report" -> parseJacocoLike(root)
-            "coverage" -> parseCoberturaLike(root)
-            else -> emptyList()
-        }
+        val files =
+            when (root.tagName.lowercase()) {
+                "report" -> parseJacocoLike(root)
+                "coverage" -> parseCoberturaLike(root)
+                else -> emptyList()
+            }
 
         return CoverageDocument(
             schemaVersion = 1,
@@ -139,11 +143,7 @@ class CoverageImporter {
         }
     }
 
-    private data class XmlCounter(
-        val type: String,
-        val covered: Int,
-        val missed: Int
-    ) {
+    private data class XmlCounter(val type: String, val covered: Int, val missed: Int) {
         fun asCoverageCounter(): CoverageCounter = CoverageCounter(covered = covered, total = covered + missed)
     }
 

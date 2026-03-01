@@ -5,14 +5,14 @@ import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isTrue
-import io.github.priospot.model.ModelJson
 import io.github.priospot.model.IntegerMetric
+import io.github.priospot.model.ModelJson
 import io.github.priospot.model.PanopticodeDocument
 import io.github.priospot.model.RatioMetric
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class PriospotEngineTest {
     @TempDir
@@ -58,16 +58,17 @@ class PriospotEngineTest {
         )
 
         val output = tempDir.resolve("out")
-        val config = PriospotConfig(
-            projectName = "sample",
-            sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
-            coverageReports = listOf(coverageXml),
-            complexityReports = listOf(complexityJson),
-            churnLog = churnLog,
-            outputDir = output,
-            deterministicTimestamp = "2026-01-01T00:00:00Z",
-            basePath = tempDir
-        )
+        val config =
+            PriospotConfig(
+                projectName = "sample",
+                sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
+                coverageReports = listOf(coverageXml),
+                complexityReports = listOf(complexityJson),
+                churnLog = churnLog,
+                outputDir = output,
+                deterministicTimestamp = "2026-01-01T00:00:00Z",
+                basePath = tempDir
+            )
 
         val result = PriospotEngine().run(config)
 
@@ -95,18 +96,19 @@ class PriospotEngineTest {
         )
 
         val output = tempDir.resolve("out-defaults")
-        val result = PriospotEngine().run(
-            PriospotConfig(
-                projectName = "sample",
-                sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
-                coverageReports = emptyList(),
-                complexityReports = emptyList(),
-                churnLog = churnLog,
-                outputDir = output,
-                deterministicTimestamp = "2026-01-01T00:00:00Z",
-                basePath = tempDir
+        val result =
+            PriospotEngine().run(
+                PriospotConfig(
+                    projectName = "sample",
+                    sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
+                    coverageReports = emptyList(),
+                    complexityReports = emptyList(),
+                    churnLog = churnLog,
+                    outputDir = output,
+                    deterministicTimestamp = "2026-01-01T00:00:00Z",
+                    basePath = tempDir
+                )
             )
-        )
 
         val json = Files.readString(result.priospotJson)
         assertThat(json).contains("\"name\" : \"Line Coverage\"")
@@ -134,18 +136,19 @@ class PriospotEngineTest {
         )
 
         val output = tempDir.resolve("out-test-defaults")
-        val result = PriospotEngine().run(
-            PriospotConfig(
-                projectName = "sample",
-                sourceRoots = listOf(tempDir.resolve("src/main/kotlin"), tempDir.resolve("src/test/kotlin")),
-                coverageReports = emptyList(),
-                complexityReports = emptyList(),
-                churnLog = churnLog,
-                outputDir = output,
-                deterministicTimestamp = "2026-01-01T00:00:00Z",
-                basePath = tempDir
+        val result =
+            PriospotEngine().run(
+                PriospotConfig(
+                    projectName = "sample",
+                    sourceRoots = listOf(tempDir.resolve("src/main/kotlin"), tempDir.resolve("src/test/kotlin")),
+                    coverageReports = emptyList(),
+                    complexityReports = emptyList(),
+                    churnLog = churnLog,
+                    outputDir = output,
+                    deterministicTimestamp = "2026-01-01T00:00:00Z",
+                    basePath = tempDir
+                )
             )
-        )
 
         val doc = ModelJson.mapper.readValue(Files.readString(result.priospotJson), PanopticodeDocument::class.java)
         val mainFile = doc.project.files.first { it.path.endsWith("MainFile.kt") }
@@ -189,18 +192,19 @@ class PriospotEngineTest {
         )
 
         val output = tempDir.resolve("out-source-complexity")
-        val result = PriospotEngine().run(
-            PriospotConfig(
-                projectName = "sample",
-                sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
-                coverageReports = emptyList(),
-                complexityReports = emptyList(),
-                churnLog = churnLog,
-                outputDir = output,
-                deterministicTimestamp = "2026-01-01T00:00:00Z",
-                basePath = tempDir
+        val result =
+            PriospotEngine().run(
+                PriospotConfig(
+                    projectName = "sample",
+                    sourceRoots = listOf(tempDir.resolve("src/main/kotlin")),
+                    coverageReports = emptyList(),
+                    complexityReports = emptyList(),
+                    churnLog = churnLog,
+                    outputDir = output,
+                    deterministicTimestamp = "2026-01-01T00:00:00Z",
+                    basePath = tempDir
+                )
             )
-        )
 
         val doc = ModelJson.mapper.readValue(Files.readString(result.priospotJson), PanopticodeDocument::class.java)
         val file = doc.project.files.single { it.path.endsWith("Calc.kt") }

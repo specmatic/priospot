@@ -16,28 +16,35 @@ class C3ComputerTest {
 
     @Test
     fun `formula produces expected range`() {
-        val project = Project(
-            name = "p",
-            version = null,
-            basePath = "/tmp",
-            files = listOf(
-                FileEntry(
-                    name = "Foo.kt",
-                    path = "src/Foo.kt",
-                    metrics = listOf(
-                        IntegerMetric(MetricNames.TIMES_CHANGED, 3),
-                        IntegerMetric(MetricNames.LINES_ADDED, 30),
-                        IntegerMetric(MetricNames.LINES_REMOVED, 10),
-                        IntegerMetric(MetricNames.MAX_CCN, 8),
-                        RatioMetric(MetricNames.LINE_COVERAGE, 80.0, 100.0)
+        val project =
+            Project(
+                name = "p",
+                version = null,
+                basePath = "/tmp",
+                files =
+                    listOf(
+                        FileEntry(
+                            name = "Foo.kt",
+                            path = "src/Foo.kt",
+                            metrics =
+                                listOf(
+                                    IntegerMetric(MetricNames.TIMES_CHANGED, 3),
+                                    IntegerMetric(MetricNames.LINES_ADDED, 30),
+                                    IntegerMetric(MetricNames.LINES_REMOVED, 10),
+                                    IntegerMetric(MetricNames.MAX_CCN, 8),
+                                    RatioMetric(MetricNames.LINE_COVERAGE, 80.0, 100.0)
+                                )
+                        )
                     )
-                )
             )
-        )
 
         val result = c3.compute(project, churnDays = 30)
 
-        val c3Metric = result.project.files.single().metrics.first { it.name == MetricNames.C3_INDICATOR }
+        val c3Metric =
+            result.project.files
+                .single()
+                .metrics
+                .first { it.name == MetricNames.C3_INDICATOR }
         val value = (c3Metric as io.github.priospot.model.DecimalMetric).value
         assertThat(value in 0.0..1.0).isTrue()
         assertThat(result.filesComputed).isEqualTo(1)
@@ -45,12 +52,13 @@ class C3ComputerTest {
 
     @Test
     fun `skips file with missing metrics`() {
-        val project = Project(
-            name = "p",
-            version = null,
-            basePath = "/tmp",
-            files = listOf(FileEntry(name = "Foo.kt", path = "src/Foo.kt"))
-        )
+        val project =
+            Project(
+                name = "p",
+                version = null,
+                basePath = "/tmp",
+                files = listOf(FileEntry(name = "Foo.kt", path = "src/Foo.kt"))
+            )
 
         val result = c3.compute(project, churnDays = 30)
 

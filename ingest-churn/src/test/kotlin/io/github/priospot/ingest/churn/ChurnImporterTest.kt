@@ -10,13 +10,14 @@ class ChurnImporterTest {
 
     @Test
     fun `parses git numstat log and aggregates per file`() {
-        val text = """
+        val text =
+            """
             --abc--2026-01-01--author
             3\t1\tsrc/main/kotlin/A.kt
             --def--2026-01-02--author
             2\t2\tsrc/main/kotlin/A.kt
             1\t0\tsrc/main/kotlin/B.kt
-        """.trimIndent()
+            """.trimIndent()
 
         val map = importer.parseGitNumstatLog(text)
 
