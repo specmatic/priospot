@@ -1,16 +1,20 @@
 package io.github.priospot.cli
 
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isTrue
 import io.github.priospot.model.ModelJson
+import io.github.priospot.model.IntegerMetric
 import io.github.priospot.model.PanopticodeDocument
+import io.github.priospot.model.RatioMetric
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class MainTest {
     @TempDir
@@ -18,8 +22,8 @@ class MainTest {
 
     @Test
     fun `prints usage when no args are provided`() {
-        val out = captureStdout { assertEquals(0, runCli(emptyArray())) }
-        assertTrue(out.contains("Usage:"))
+        val out = captureStdout { assertThat(runCli(emptyArray())).isEqualTo(0) }
+        assertThat(out).contains("Usage:")
     }
 
     @Test
@@ -72,8 +76,7 @@ class MainTest {
         )
 
         val outputJson = tempDir.resolve("out/priospot.json")
-        assertEquals(
-            0,
+        assertThat(
             runCli(
             arrayOf(
                 "analyze",
@@ -84,18 +87,18 @@ class MainTest {
                 "--output-json", normalize(base.relativize(outputJson).toString())
             )
             )
-        )
+        ).isEqualTo(0)
 
-        assertTrue(Files.exists(outputJson))
+        assertThat(Files.exists(outputJson)).isTrue()
         val doc = ModelJson.mapper.readValue(Files.readString(outputJson), PanopticodeDocument::class.java)
         val file = doc.project.files.single()
-        val maxCcn = file.metrics.first { it.name == "MAX-CCN" }
-        val ncss = file.metrics.first { it.name == "NCSS" }
-        val coverage = file.metrics.first { it.name == "Line Coverage" }
-        assertTrue(maxCcn.toString().contains("value=4"))
-        assertTrue(ncss.toString().contains("value=18"))
-        assertTrue(coverage.toString().contains("numerator=5.0"))
-        assertTrue(coverage.toString().contains("denominator=10.0"))
+        val maxCcn = file.metrics.first { it.name == "MAX-CCN" } as IntegerMetric
+        val ncss = file.metrics.first { it.name == "NCSS" } as IntegerMetric
+        val coverage = file.metrics.first { it.name == "Line Coverage" } as RatioMetric
+        assertThat(maxCcn.value).isEqualTo(4)
+        assertThat(ncss.value).isEqualTo(18)
+        assertThat(coverage.numerator).isEqualTo(5.0)
+        assertThat(coverage.denominator).isEqualTo(10.0)
     }
 
     @Test
@@ -130,8 +133,7 @@ class MainTest {
         val outputJson = tempDir.resolve("out/priospot.json")
         val outputSvg = tempDir.resolve("out/priospot-interactive-treemap.svg")
 
-        assertEquals(
-            0,
+        assertThat(
             runCli(
             arrayOf(
                 "analyze",
@@ -142,9 +144,8 @@ class MainTest {
                 "--output-json", normalize(base.relativize(outputJson).toString())
             )
             )
-        )
-        assertEquals(
-            0,
+        ).isEqualTo(0)
+        assertThat(
             runCli(
             arrayOf(
                 "report",
@@ -153,19 +154,19 @@ class MainTest {
                 "--output-svg", normalize(base.relativize(outputSvg).toString())
             )
             )
-        )
+        ).isEqualTo(0)
 
-        assertTrue(Files.exists(outputSvg))
+        assertThat(Files.exists(outputSvg)).isTrue()
         val svg = Files.readString(outputSvg)
-        assertTrue(svg.contains("<svg"))
-        assertTrue(svg.contains("Legend"))
+        assertThat(svg).contains("<svg")
+        assertThat(svg).contains("Legend")
     }
 
     @Test
     fun `analyze fails when neither coverage-report nor coverage-reports is given`() {
         var exitCode = 0
         val err = captureStderr {
-            val ex = assertFailsWith<ExitCalled> {
+            val ex = try {
                 runMain(
                     arrayOf(
                         "analyze",
@@ -175,12 +176,16 @@ class MainTest {
                         "--output-json", "build/out.json"
                     )
                 ) { code -> throw ExitCalled(code) }
+                throw IllegalStateException("Expected ExitCalled")
+            } catch (exception: Exception) {
+                exception
             }
-            exitCode = ex.code
+            assertThat(ex).isInstanceOf(ExitCalled::class)
+            exitCode = (ex as ExitCalled).code
         }
 
-        assertEquals(-1, exitCode)
-        assertTrue(err.contains("Missing required option --coverage-report or --coverage-reports"))
+        assertThat(exitCode).isEqualTo(-1)
+        assertThat(err).contains("Missing required option --coverage-report or --coverage-reports")
     }
 
     private fun captureStdout(block: () -> Unit): String {

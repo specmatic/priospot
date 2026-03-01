@@ -1,8 +1,9 @@
 package io.github.priospot.ingest.churn
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
+import org.junit.jupiter.api.Test
 
 class ChurnImporterTest {
     private val importer = ChurnImporter()
@@ -19,10 +20,10 @@ class ChurnImporterTest {
 
         val map = importer.parseGitNumstatLog(text)
 
-        assertEquals(5, map.getValue("src/main/kotlin/A.kt").linesAdded)
-        assertEquals(3, map.getValue("src/main/kotlin/A.kt").linesRemoved)
-        assertEquals(2, map.getValue("src/main/kotlin/A.kt").timesChanged)
-        assertEquals(1, map.getValue("src/main/kotlin/B.kt").timesChanged)
+        assertThat(map.getValue("src/main/kotlin/A.kt").linesAdded).isEqualTo(5)
+        assertThat(map.getValue("src/main/kotlin/A.kt").linesRemoved).isEqualTo(3)
+        assertThat(map.getValue("src/main/kotlin/A.kt").timesChanged).isEqualTo(2)
+        assertThat(map.getValue("src/main/kotlin/B.kt").timesChanged).isEqualTo(1)
     }
 
     @Test
@@ -30,7 +31,7 @@ class ChurnImporterTest {
         val freq = importer.changeFrequencyIndicator(numChanges = 5, days = 30)
         val lines = importer.linesChangedIndicator(linesChanged = 100, days = 30)
 
-        assertTrue(freq in 0.0..1.0)
-        assertTrue(lines in 0.0..1.0)
+        assertThat(freq in 0.0..1.0).isTrue()
+        assertThat(lines in 0.0..1.0).isTrue()
     }
 }

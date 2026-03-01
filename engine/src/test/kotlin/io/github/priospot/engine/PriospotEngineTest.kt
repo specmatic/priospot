@@ -1,5 +1,10 @@
 package io.github.priospot.engine
 
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
+import assertk.assertions.isGreaterThan
+import assertk.assertions.isTrue
 import io.github.priospot.model.ModelJson
 import io.github.priospot.model.IntegerMetric
 import io.github.priospot.model.PanopticodeDocument
@@ -8,8 +13,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class PriospotEngineTest {
     @TempDir
@@ -68,12 +71,12 @@ class PriospotEngineTest {
 
         val result = PriospotEngine().run(config)
 
-        assertTrue(Files.exists(result.priospotJson))
-        assertEquals(4, result.reportPaths.size)
-        assertTrue(Files.exists(output.resolve("priospot-interactive-treemap.svg")))
-        assertTrue(Files.exists(output.resolve("coverage-interactive-treemap.svg")))
-        assertTrue(Files.exists(output.resolve("complexity-interactive-treemap.svg")))
-        assertTrue(Files.exists(output.resolve("churn-interactive-treemap.svg")))
+        assertThat(Files.exists(result.priospotJson)).isTrue()
+        assertThat(result.reportPaths.size).isEqualTo(4)
+        assertThat(Files.exists(output.resolve("priospot-interactive-treemap.svg"))).isTrue()
+        assertThat(Files.exists(output.resolve("coverage-interactive-treemap.svg"))).isTrue()
+        assertThat(Files.exists(output.resolve("complexity-interactive-treemap.svg"))).isTrue()
+        assertThat(Files.exists(output.resolve("churn-interactive-treemap.svg"))).isTrue()
     }
 
     @Test
@@ -106,9 +109,9 @@ class PriospotEngineTest {
         )
 
         val json = Files.readString(result.priospotJson)
-        assertTrue(json.contains("\"name\" : \"Line Coverage\""))
-        assertTrue(json.contains("\"name\" : \"MAX-CCN\""))
-        assertTrue(json.contains("\"name\" : \"C3 Indicator\""))
+        assertThat(json).contains("\"name\" : \"Line Coverage\"")
+        assertThat(json).contains("\"name\" : \"MAX-CCN\"")
+        assertThat(json).contains("\"name\" : \"C3 Indicator\"")
     }
 
     @Test
@@ -150,10 +153,10 @@ class PriospotEngineTest {
         val mainCoverage = mainFile.metrics.first { it.name == "Line Coverage" } as RatioMetric
         val testCoverage = testFile.metrics.first { it.name == "Line Coverage" } as RatioMetric
 
-        assertEquals(0.0, mainCoverage.numerator)
-        assertEquals(1.0, mainCoverage.denominator)
-        assertEquals(1.0, testCoverage.numerator)
-        assertEquals(1.0, testCoverage.denominator)
+        assertThat(mainCoverage.numerator).isEqualTo(0.0)
+        assertThat(mainCoverage.denominator).isEqualTo(1.0)
+        assertThat(testCoverage.numerator).isEqualTo(1.0)
+        assertThat(testCoverage.denominator).isEqualTo(1.0)
     }
 
     @Test
@@ -203,7 +206,7 @@ class PriospotEngineTest {
         val file = doc.project.files.single { it.path.endsWith("Calc.kt") }
         val maxCcn = file.metrics.first { it.name == "MAX-CCN" } as IntegerMetric
         val ncss = file.metrics.first { it.name == "NCSS" } as IntegerMetric
-        assertEquals(3, maxCcn.value)
-        assertTrue(ncss.value > 0)
+        assertThat(maxCcn.value).isEqualTo(3)
+        assertThat(ncss.value).isGreaterThan(0)
     }
 }

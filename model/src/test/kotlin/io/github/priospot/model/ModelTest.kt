@@ -1,7 +1,8 @@
 package io.github.priospot.model
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import org.junit.jupiter.api.Test
 
 class ModelTest {
     @Test
@@ -17,6 +18,6 @@ class ModelTest {
 
         val sorted = doc.sortedDeterministic()
 
-        assertEquals("a/File.kt", sorted.files.first().path)
+        assertThat(sorted.files.first().path).isEqualTo("a/File.kt")
     }
 }
