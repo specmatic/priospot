@@ -19,6 +19,16 @@ jobs:
         with:
           github-token-for-pr-comment: ${{ secrets.GITHUB_TOKEN }} # use the CI token with write permissions to post PR comments
 
+      - name: Generate PrioSpot report
+        run: ./gradlew priospot
+
+      - name: Upload PrioSpot treemap
+        uses: actions/upload-artifact@v4
+        with:
+          name: priospot-interactive-treemap
+          path: build/reports/priospot/priospot-interactive-treemap.svg
+          if-no-files-found: error
+
       - name: Publish Snapshot
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') && matrix.os == 'ubuntu-latest'
         run: ./gradlew publishAllPublicationsToMavenCentralRepository --parallel
