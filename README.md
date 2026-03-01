@@ -218,4 +218,4 @@ node examples/node-wrapper/run-priospot.mjs analyze --help
 
 Canonical schema is available at:
 
-- `schema/panopticode.schema.json`
+- `schema/priospot.schema.json`
