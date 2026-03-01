@@ -10,7 +10,8 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        mavenLocal {
+        maven {
+            url = uri("https://central.sonatype.com/repository/maven-snapshots")
             mavenContent {
                 snapshotsOnly()
             }
@@ -19,7 +20,14 @@ pluginManagement {
                 includeGroupAndSubgroups("io.specmatic")
             }
         }
-
+        mavenLocal {
+            mavenContent {
+                snapshotsOnly()
+            }
+            content {
+                includeGroupAndSubgroups("io.specmatic")
+            }
+        }
     }
 }
 
@@ -36,5 +44,5 @@ include(
     "engine",
     "gradle-plugin",
     "cli",
-    "compat-xml"
+    "compat-xml",
 )
