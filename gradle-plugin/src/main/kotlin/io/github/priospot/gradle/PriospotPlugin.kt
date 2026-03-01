@@ -103,7 +103,7 @@ abstract class PriospotTask : DefaultTask() {
         )
 
         val result = PriospotEngine().run(config)
-        logger.lifecycle("PrioSpot completed: {}", result.panopticodeJson)
+        logger.lifecycle("PrioSpot completed: {}", result.priospotJson)
         result.summary.forEach { (k, v) -> logger.lifecycle("{}={}", k, v) }
         result.diagnostics.forEach { logger.warn(it) }
     }

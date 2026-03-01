@@ -68,7 +68,7 @@ class PriospotEngineTest {
 
         val result = PriospotEngine().run(config)
 
-        assertTrue(Files.exists(result.panopticodeJson))
+        assertTrue(Files.exists(result.priospotJson))
         assertEquals(4, result.reportPaths.size)
         assertTrue(Files.exists(output.resolve("priospot-interactive-treemap.svg")))
         assertTrue(Files.exists(output.resolve("coverage-interactive-treemap.svg")))
@@ -105,7 +105,7 @@ class PriospotEngineTest {
             )
         )
 
-        val json = Files.readString(result.panopticodeJson)
+        val json = Files.readString(result.priospotJson)
         assertTrue(json.contains("\"name\" : \"Line Coverage\""))
         assertTrue(json.contains("\"name\" : \"MAX-CCN\""))
         assertTrue(json.contains("\"name\" : \"C3 Indicator\""))
@@ -144,7 +144,7 @@ class PriospotEngineTest {
             )
         )
 
-        val doc = ModelJson.mapper.readValue(Files.readString(result.panopticodeJson), PanopticodeDocument::class.java)
+        val doc = ModelJson.mapper.readValue(Files.readString(result.priospotJson), PanopticodeDocument::class.java)
         val mainFile = doc.project.files.first { it.path.endsWith("MainFile.kt") }
         val testFile = doc.project.files.first { it.path.endsWith("MainFileTest.kt") }
         val mainCoverage = mainFile.metrics.first { it.name == "Line Coverage" } as RatioMetric
@@ -199,7 +199,7 @@ class PriospotEngineTest {
             )
         )
 
-        val doc = ModelJson.mapper.readValue(Files.readString(result.panopticodeJson), PanopticodeDocument::class.java)
+        val doc = ModelJson.mapper.readValue(Files.readString(result.priospotJson), PanopticodeDocument::class.java)
         val file = doc.project.files.single { it.path.endsWith("Calc.kt") }
         val maxCcn = file.metrics.first { it.name == "MAX-CCN" } as IntegerMetric
         val ncss = file.metrics.first { it.name == "NCSS" } as IntegerMetric

@@ -12,7 +12,7 @@ The implementation must:
 
 ## 2. Goals
 1. Build PrioSpot as a standalone engine that ingests existing quality metrics and computes hotspot priority from the C3 formula.
-2. Use JSON (`panopticode.json`) as the canonical model format.
+2. Use JSON (`priospot.json`) as the canonical model format.
 3. Generate interactive SVG treemap reports for C3, coverage, complexity, and churn.
 4. Eliminate Ant and legacy build integration from runtime behavior.
 5. Support multiple runtime integrations (Gradle, CLI, and other build systems).
@@ -26,7 +26,7 @@ The implementation must:
 
 ## 4. Canonical Outputs
 The implementation must produce (at minimum):
-1. `panopticode.json`
+1. `priospot.json`
 2. `priospot-interactive-treemap.svg`
 3. `coverage-interactive-treemap.svg`
 4. `complexity-interactive-treemap.svg`
@@ -534,7 +534,7 @@ Example execution:
 1. `./gradlew priospot`
 
 Expected outputs:
-1. `build/reports/priospot/panopticode.json`
+1. `build/reports/priospot/priospot.json`
 2. `build/reports/priospot/priospot-interactive-treemap.svg`
 3. `build/reports/priospot/coverage-interactive-treemap.svg`
 4. `build/reports/priospot/complexity-interactive-treemap.svg`
@@ -566,7 +566,7 @@ Compatibility mode can be removed after downstream consumers migrate.
 ## 20. Acceptance Criteria (Definition of Done)
 1. Host integration `priospot` command succeeds on target repositories.
 2. C3, coverage, complexity, churn SVGs are generated.
-3. `panopticode.json` contains all required entities and metric names.
+3. `priospot.json` contains all required entities and metric names.
 4. C3 values match formula exactly.
 5. No Ant runtime dependency in execution path.
 6. CI runs analysis and report generation successful.

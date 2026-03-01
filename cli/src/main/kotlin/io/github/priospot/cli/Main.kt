@@ -72,12 +72,12 @@ private fun runAnalyze(args: List<String>) {
         )
     )
 
-    if (result.panopticodeJson != outputPath) {
+    if (result.priospotJson != outputPath) {
         Files.createDirectories(outputPath.parent)
-        Files.copy(result.panopticodeJson, outputPath, StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(result.priospotJson, outputPath, StandardCopyOption.REPLACE_EXISTING)
     }
 
-    println("Generated ${result.panopticodeJson}")
+    println("Generated ${result.priospotJson}")
 }
 
 private fun runReport(args: List<String>) {

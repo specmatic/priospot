@@ -50,7 +50,7 @@ data class StageTiming(
 )
 
 data class PriospotResult(
-    val panopticodeJson: Path,
+    val priospotJson: Path,
     val reportPaths: Map<ReportType, Path>,
     val stageTimings: List<StageTiming>,
     val diagnostics: List<String>,
@@ -212,9 +212,9 @@ class PriospotEngine {
             project = deterministicProject
         )
 
-        val panopticodeJson = config.outputDir.resolve("panopticode.json")
-        timed("write-panopticode-json", timings) {
-            Files.writeString(panopticodeJson, ModelJson.mapper.writeValueAsString(document))
+        val priospotJson = config.outputDir.resolve("priospot.json")
+        timed("write-priospot-json", timings) {
+            Files.writeString(priospotJson, ModelJson.mapper.writeValueAsString(document))
         }
 
         if (config.emitCompatibilityXml) {
@@ -246,7 +246,7 @@ class PriospotEngine {
         )
 
         return PriospotResult(
-            panopticodeJson = panopticodeJson,
+            priospotJson = priospotJson,
             reportPaths = reportPaths,
             stageTimings = timings,
             diagnostics = diagnostics,

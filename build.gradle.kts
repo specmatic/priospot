@@ -8,6 +8,7 @@ import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import io.gitlab.arturbosch.detekt.Detekt
 
 plugins {
+    base
     kotlin("jvm") version "2.0.21" apply false
     id("org.jetbrains.kotlinx.kover") version "0.8.3" apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false
@@ -132,7 +133,7 @@ tasks.register<JavaExec>("priospot") {
             "--coverage-reports", coverageReports.joinToString(","),
             "--complexity-reports", complexityReports.joinToString(","),
             "--churn-days", "30",
-            "--output-json", layout.buildDirectory.file("reports/priospot/panopticode.json").get().asFile.path
+            "--output-json", layout.buildDirectory.file("reports/priospot/priospot.json").get().asFile.path
         )
     }
 }

@@ -69,7 +69,7 @@ priospot {
 
 Expected outputs in `build/reports/priospot`:
 
-- `panopticode.json`
+- `priospot.json`
 - `priospot-interactive-treemap.svg`
 - `coverage-interactive-treemap.svg`
 - `complexity-interactive-treemap.svg`
@@ -86,21 +86,21 @@ Analyze and generate all canonical outputs:
   --coverage-report build/reports/kover/report.xml \
   --complexity-report build/reports/detekt/detekt.xml \
   --churn-days 30 \
-  --output-json build/reports/priospot/panopticode.json'
+  --output-json build/reports/priospot/priospot.json'
 ```
 
 Generate a single report from existing JSON:
 
 ```bash
 ./gradlew :cli:run --args='report \
-  --input-json build/reports/priospot/panopticode.json \
+  --input-json build/reports/priospot/priospot.json \
   --type priospot \
   --output-svg build/reports/priospot/priospot-interactive-treemap.svg'
 ```
 
 ## Modules
 
-- `model`: canonical `panopticode.json` and `coverage.json` domain model
+- `model`: canonical `priospot.json` and `coverage.json` domain model
 - `ingest-source`: source file inventory
 - `ingest-churn`: git/baseline churn parser and indicators
 - `ingest-coverage`: coverage normalization and merge

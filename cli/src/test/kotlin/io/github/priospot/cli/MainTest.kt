@@ -23,7 +23,7 @@ class MainTest {
     }
 
     @Test
-    fun `analyze supports multi-report args and writes panopticode json`() {
+    fun `analyze supports multi-report args and writes priospot json`() {
         val base = Path.of(".").toAbsolutePath().normalize()
         val sourceRoot = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(sourceRoot)
@@ -71,7 +71,7 @@ class MainTest {
             """[{"path":"$relativeFilePath","ncss":11,"maxCcn":4}]"""
         )
 
-        val outputJson = tempDir.resolve("out/panopticode.json")
+        val outputJson = tempDir.resolve("out/priospot.json")
         main(
             arrayOf(
                 "analyze",
@@ -96,7 +96,7 @@ class MainTest {
     }
 
     @Test
-    fun `report generates svg from panopticode json`() {
+    fun `report generates svg from priospot json`() {
         val base = Path.of(".").toAbsolutePath().normalize()
         val sourceRoot = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(sourceRoot)
@@ -124,7 +124,7 @@ class MainTest {
             """[{"path":"$relativeFilePath","ncss":3,"maxCcn":1}]"""
         )
 
-        val outputJson = tempDir.resolve("out/panopticode.json")
+        val outputJson = tempDir.resolve("out/priospot.json")
         val outputSvg = tempDir.resolve("out/priospot-interactive-treemap.svg")
 
         main(
