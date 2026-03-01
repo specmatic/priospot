@@ -137,6 +137,44 @@ Generate a single report from existing JSON:
   --output-svg build/reports/priospot/priospot-interactive-treemap.svg'
 ```
 
+## CLI Distribution (Jar and Docker)
+
+The CLI is published as:
+- a runnable jar on Maven Central (`io.specmatic.priospot:cli`)
+- release artifacts on GitHub Releases
+
+### Use the CLI Jar
+
+From Maven Central:
+
+```bash
+mvn dependency:get -Dartifact=io.specmatic.priospot:cli:<version>
+java -jar ~/.m2/repository/io/specmatic/priospot/cli/<version>/cli-<version>.jar --help
+```
+
+From a GitHub Release:
+
+```bash
+java -jar priospot-cli-<version>.jar --help
+```
+
+### Use the Docker Image
+
+A Docker image is also published with releases. Use the image/tag from the release notes and run it by mounting your repository:
+
+```bash
+docker run --rm \
+  -v "$PWD:/work" \
+  -w /work \
+  <priospot-cli-image>:<version> \
+  analyze \
+  --project-name sample \
+  --source-roots src/main/kotlin \
+  --coverage-report build/reports/kover/report.xml \
+  --complexity-report build/reports/detekt/detekt.xml \
+  --output-json build/reports/priospot/priospot.json
+```
+
 ## Config File Keys
 
 Supported keys (for host integrations):
