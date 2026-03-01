@@ -1,5 +1,12 @@
 # PrioSpot
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.specmatic.priospot/cli?label=Maven%20Central)](https://search.maven.org/artifact/io.specmatic.priospot/cli)
+[![Docker Hub](https://img.shields.io/docker/v/specmatic/priospot?label=Docker%20Hub&sort=semver)](https://hub.docker.com/r/specmatic/priospot)
+[![Docker Pulls](https://img.shields.io/docker/pulls/specmatic/priospot?label=Docker%20Pulls)](https://hub.docker.com/r/specmatic/priospot)
+[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.specmatic.priospot?label=Gradle%20Plugin)](https://plugins.gradle.org/plugin/io.specmatic.priospot)
+[![GitHub Release](https://img.shields.io/github/v/release/specmatic/priospot?label=GitHub%20Release)](https://github.com/specmatic/priospot/releases)
+[![License](https://img.shields.io/github/license/specmatic/priospot)](https://github.com/specmatic/priospot/blob/main/LICENSE)
+
 PrioSpot (Prioritize Hotspots) is a language-agnostic hotspot engine that computes C3 (churn + complexity + coverage) and generates interactive SVG treemap reports to help you visualize and prioritize hotspots in your code.
 
 ## Why This Matters
