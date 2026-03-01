@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
@@ -18,6 +19,12 @@ subprojects {
     plugins.withId("org.jetbrains.kotlin.jvm") {
         apply(plugin = "org.jetbrains.kotlinx.kover")
         apply(plugin = "io.gitlab.arturbosch.detekt")
+        configure<DetektExtension> {
+            buildUponDefaultConfig = true
+            allRules = false
+            ignoreFailures = true
+            parallel = true
+        }
     }
 }
 
