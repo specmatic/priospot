@@ -56,6 +56,32 @@ specmatic {
         withOSSLibrary(moduleProject) {
             publishToMavenCentral()
             githubRelease()
+
+            publish {
+                pom {
+                    name.set("PrioSpot - ${moduleProject.name} Library")
+                    description.set("PrioSpot - ${moduleProject.name} module (for internal use by priospot)")
+                    url.set("https://github.com/specmatic/priospot")
+                    licenses {
+                        license {
+                            name.set("MIT")
+                            url.set("https://opensource.org/license/mit")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = "specmaticBuilders"
+                            name = "Specmatic Builders"
+                            email = "info@specmatic.io"
+                        }
+                    }
+                    scm {
+                        connection = "https://github.com/specmatic/priospot"
+                        url = "https://github.com/specmatic/priospot"
+                    }
+                }
+            }
         }
     }
 
@@ -67,6 +93,32 @@ specmatic {
         }
         dockerBuild {
             imageName = "priospot"
+        }
+
+        publish {
+            pom {
+                name.set("PrioSpot - CLI")
+                description.set("PrioSpot - CLI application")
+                url.set("https://github.com/specmatic/priospot")
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://opensource.org/license/mit")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = "specmaticBuilders"
+                        name = "Specmatic Builders"
+                        email = "info@specmatic.io"
+                    }
+                }
+                scm {
+                    connection = "https://github.com/specmatic/priospot"
+                    url = "https://github.com/specmatic/priospot"
+                }
+            }
         }
     }
 

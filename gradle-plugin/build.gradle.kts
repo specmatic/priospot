@@ -28,7 +28,18 @@ gradlePlugin {
             implementationClass = "io.github.priospot.gradle.PriospotPlugin"
             displayName = "PrioSpot"
             description = "Computes C3 hotspots and treemap reports"
-            tags = listOf("c3", "hotspot", "priospot", "specmatic")
+            tags =
+                listOf(
+                    "c3",
+                    "hotspot",
+                    "priospot",
+                    "specmatic",
+                    "code-quality",
+                    "code-complexity",
+                    "quality",
+                    "complexity",
+                    "static-analysis",
+                )
         }
     }
 
