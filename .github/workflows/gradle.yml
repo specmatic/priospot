@@ -18,6 +18,7 @@ jobs:
       - uses: specmatic/specmatic-github-workflows/action-build-gradle@main
         with:
           github-token-for-pr-comment: ${{ secrets.GITHUB_TOKEN }} # use the CI token with write permissions to post PR comments
+          gradle-extra-args: "--stacktrace"
 
       - name: Generate PrioSpot report
         run: ./gradlew priospot
