@@ -1,25 +1,21 @@
 package io.github.priospot.cli
 
+import kotlin.system.exitProcess
 import picocli.CommandLine
 
 fun main(args: Array<String>) {
-    val commandLine = createCommandLine()
-    if (args.isEmpty()) {
-        commandLine.usage(System.out)
-        return
-    }
-    commandLine.execute(*args)
+    runMain(args, ::exitProcess)
 }
 
-private fun createCommandLine(): CommandLine {
+internal fun runMain(args: Array<String>, exit: (Int) -> Unit) {
+    exit(runCli(args))
+}
+
+internal fun runCli(args: Array<String>): Int {
     val commandLine = CommandLine(PriospotCommand())
-    commandLine.executionExceptionHandler =
-        CommandLine.IExecutionExceptionHandler { ex, _, _ ->
-            throw ex
-        }
-    commandLine.parameterExceptionHandler =
-        CommandLine.IParameterExceptionHandler { ex, _ ->
-            throw ex
-        }
-    return commandLine
+    if (args.isEmpty()) {
+        commandLine.usage(System.out)
+        return 0
+    }
+    return commandLine.execute(*args)
 }

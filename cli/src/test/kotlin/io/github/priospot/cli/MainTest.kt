@@ -8,6 +8,8 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class MainTest {
@@ -16,7 +18,7 @@ class MainTest {
 
     @Test
     fun `prints usage when no args are provided`() {
-        val out = captureStdout { main(emptyArray()) }
+        val out = captureStdout { assertEquals(0, runCli(emptyArray())) }
         assertTrue(out.contains("Usage:"))
     }
 
@@ -70,7 +72,9 @@ class MainTest {
         )
 
         val outputJson = tempDir.resolve("out/priospot.json")
-        main(
+        assertEquals(
+            0,
+            runCli(
             arrayOf(
                 "analyze",
                 "--project-name", "cli-test",
@@ -78,6 +82,7 @@ class MainTest {
                 "--coverage-reports", listOf(coverage1, coverage2).joinToString(",") { normalize(base.relativize(it).toString()) },
                 "--complexity-reports", listOf(complexity1, complexity2).joinToString(",") { normalize(base.relativize(it).toString()) },
                 "--output-json", normalize(base.relativize(outputJson).toString())
+            )
             )
         )
 
@@ -125,7 +130,9 @@ class MainTest {
         val outputJson = tempDir.resolve("out/priospot.json")
         val outputSvg = tempDir.resolve("out/priospot-interactive-treemap.svg")
 
-        main(
+        assertEquals(
+            0,
+            runCli(
             arrayOf(
                 "analyze",
                 "--project-name", "cli-report-test",
@@ -134,13 +141,17 @@ class MainTest {
                 "--complexity-report", normalize(base.relativize(complexity).toString()),
                 "--output-json", normalize(base.relativize(outputJson).toString())
             )
+            )
         )
-        main(
+        assertEquals(
+            0,
+            runCli(
             arrayOf(
                 "report",
                 "--input-json", normalize(base.relativize(outputJson).toString()),
                 "--type", "priospot",
                 "--output-svg", normalize(base.relativize(outputSvg).toString())
+            )
             )
         )
 
@@ -152,17 +163,23 @@ class MainTest {
 
     @Test
     fun `analyze fails when neither coverage-report nor coverage-reports is given`() {
+        var exitCode = 0
         val err = captureStderr {
-            main(
-                arrayOf(
-                    "analyze",
-                    "--project-name", "invalid",
-                    "--source-roots", "src/main/kotlin",
-                    "--complexity-report", "complexity.json",
-                    "--output-json", "build/out.json"
-                )
-            )
+            val ex = assertFailsWith<ExitCalled> {
+                runMain(
+                    arrayOf(
+                        "analyze",
+                        "--project-name", "invalid",
+                        "--source-roots", "src/main/kotlin",
+                        "--complexity-report", "complexity.json",
+                        "--output-json", "build/out.json"
+                    )
+                ) { code -> throw ExitCalled(code) }
+            }
+            exitCode = ex.code
         }
+
+        assertEquals(-1, exitCode)
         assertTrue(err.contains("Missing required option --coverage-report or --coverage-reports"))
     }
 
@@ -192,3 +209,5 @@ class MainTest {
 
     private fun normalize(path: String): String = path.replace('\\', '/')
 }
+
+private class ExitCalled(val code: Int) : RuntimeException()

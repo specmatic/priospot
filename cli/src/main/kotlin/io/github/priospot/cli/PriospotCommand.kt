@@ -11,7 +11,8 @@ import picocli.CommandLine
     subcommands = [AnalyzeCommand::class, ReportCommand::class, AutoComplete.GenerateCompletion::class],
     mixinStandardHelpOptions = true,
     scope = CommandLine.ScopeType.INHERIT,
-    versionProvider = PriospotVersionProvider::class
+    versionProvider = PriospotVersionProvider::class,
+    exitCodeOnExecutionException = -1,
 )
 class PriospotCommand : Callable<Int> {
     override fun call(): Int = 0
