@@ -28,13 +28,12 @@ class MainTest {
 
     @Test
     fun `analyze supports multi-report args and writes priospot json`() {
-        val base = Path.of(".").toAbsolutePath().normalize()
         val sourceRoot = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(sourceRoot)
         val sourceFile = sourceRoot.resolve("Sample.kt")
         Files.writeString(sourceFile, "package demo\nclass Sample { fun ok() = 1 }\n")
 
-        val relativeFilePath = normalize(base.relativize(sourceFile).toString())
+        val sourceFilePath = sourceFile.fileName.toString()
         val coverage1 = tempDir.resolve("coverage-1.json")
         val coverage2 = tempDir.resolve("coverage-2.json")
         Files.writeString(
@@ -45,7 +44,7 @@ class MainTest {
               "generator": "coverageReport",
               "generatedAt": "2026-02-28T00:00:00Z",
               "files": [
-                { "path": "$relativeFilePath", "lineCoverage": { "covered": 3, "total": 5 } }
+                { "path": "$sourceFilePath", "lineCoverage": { "covered": 3, "total": 5 } }
               ]
             }
             """.trimIndent()
@@ -58,7 +57,7 @@ class MainTest {
               "generator": "coverageReport",
               "generatedAt": "2026-02-28T00:00:00Z",
               "files": [
-                { "path": "$relativeFilePath", "lineCoverage": { "covered": 2, "total": 5 } }
+                { "path": "$sourceFilePath", "lineCoverage": { "covered": 2, "total": 5 } }
               ]
             }
             """.trimIndent()
@@ -68,11 +67,11 @@ class MainTest {
         val complexity2 = tempDir.resolve("complexity-2.json")
         Files.writeString(
             complexity1,
-            """[{"path":"$relativeFilePath","ncss":7,"maxCcn":2}]"""
+            """[{"path":"$sourceFilePath","ncss":7,"maxCcn":2}]"""
         )
         Files.writeString(
             complexity2,
-            """[{"path":"$relativeFilePath","ncss":11,"maxCcn":4}]"""
+            """[{"path":"$sourceFilePath","ncss":11,"maxCcn":4}]"""
         )
 
         val outputJson = tempDir.resolve("out/priospot.json")
@@ -81,10 +80,14 @@ class MainTest {
             arrayOf(
                 "analyze",
                 "--project-name", "cli-test",
-                "--source-roots", normalize(base.relativize(sourceRoot).toString()),
-                "--coverage-reports", listOf(coverage1, coverage2).joinToString(",") { normalize(base.relativize(it).toString()) },
-                "--complexity-reports", listOf(complexity1, complexity2).joinToString(",") { normalize(base.relativize(it).toString()) },
-                "--output-json", normalize(base.relativize(outputJson).toString())
+                "--source-roots", normalize(sourceRoot.toAbsolutePath().toString()),
+                "--coverage-reports", listOf(coverage1, coverage2).joinToString(",") {
+                    normalize(it.toAbsolutePath().toString())
+                },
+                "--complexity-reports", listOf(complexity1, complexity2).joinToString(",") {
+                    normalize(it.toAbsolutePath().toString())
+                },
+                "--output-json", normalize(outputJson.toAbsolutePath().toString())
             )
             )
         ).isEqualTo(0)
@@ -103,12 +106,11 @@ class MainTest {
 
     @Test
     fun `report generates svg from priospot json`() {
-        val base = Path.of(".").toAbsolutePath().normalize()
         val sourceRoot = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(sourceRoot)
         val sourceFile = sourceRoot.resolve("ReportMe.kt")
         Files.writeString(sourceFile, "class ReportMe\n")
-        val relativeFilePath = normalize(base.relativize(sourceFile).toString())
+        val sourceFilePath = sourceFile.fileName.toString()
 
         val coverage = tempDir.resolve("coverage.json")
         val complexity = tempDir.resolve("complexity.json")
@@ -120,14 +122,14 @@ class MainTest {
               "generator": "coverageReport",
               "generatedAt": "2026-02-28T00:00:00Z",
               "files": [
-                { "path": "$relativeFilePath", "lineCoverage": { "covered": 1, "total": 1 } }
+                { "path": "$sourceFilePath", "lineCoverage": { "covered": 1, "total": 1 } }
               ]
             }
             """.trimIndent()
         )
         Files.writeString(
             complexity,
-            """[{"path":"$relativeFilePath","ncss":3,"maxCcn":1}]"""
+            """[{"path":"$sourceFilePath","ncss":3,"maxCcn":1}]"""
         )
 
         val outputJson = tempDir.resolve("out/priospot.json")
@@ -138,10 +140,10 @@ class MainTest {
             arrayOf(
                 "analyze",
                 "--project-name", "cli-report-test",
-                "--source-roots", normalize(base.relativize(sourceRoot).toString()),
-                "--coverage-report", normalize(base.relativize(coverage).toString()),
-                "--complexity-report", normalize(base.relativize(complexity).toString()),
-                "--output-json", normalize(base.relativize(outputJson).toString())
+                "--source-roots", normalize(sourceRoot.toAbsolutePath().toString()),
+                "--coverage-report", normalize(coverage.toAbsolutePath().toString()),
+                "--complexity-report", normalize(complexity.toAbsolutePath().toString()),
+                "--output-json", normalize(outputJson.toAbsolutePath().toString())
             )
             )
         ).isEqualTo(0)
@@ -149,9 +151,9 @@ class MainTest {
             runCli(
             arrayOf(
                 "report",
-                "--input-json", normalize(base.relativize(outputJson).toString()),
+                "--input-json", normalize(outputJson.toAbsolutePath().toString()),
                 "--type", "priospot",
-                "--output-svg", normalize(base.relativize(outputSvg).toString())
+                "--output-svg", normalize(outputSvg.toAbsolutePath().toString())
             )
             )
         ).isEqualTo(0)
