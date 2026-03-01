@@ -26,6 +26,10 @@ subprojects {
             parallel = true
         }
     }
+
+    tasks.withType<Test> {
+        maxParallelForks = 4
+    }
 }
 
 specmatic {
