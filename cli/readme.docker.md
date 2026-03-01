@@ -18,16 +18,15 @@ Use the image/tag published with a release (see releases page):
 Example:
 
 ```bash
-docker pull <priospot-cli-image>:<version>
+docker pull specmatic/priospot
 ```
 
 ## Run Analyze
 
 ```bash
 docker run --rm \
-  -v "$PWD:/work" \
-  -w /work \
-  <priospot-cli-image>:<version> \
+  -v "$PWD:/usr/src/app" \
+  specmatic/priospot \
   analyze \
   --project-name sample \
   --source-roots src/main/kotlin \
@@ -40,9 +39,8 @@ docker run --rm \
 
 ```bash
 docker run --rm \
-  -v "$PWD:/work" \
-  -w /work \
-  <priospot-cli-image>:<version> \
+  -v "$PWD:/usr/src/app" \
+  specmatic/priospot \
   report \
   --input-json build/reports/priospot/priospot.json \
   --type priospot \
@@ -51,6 +49,5 @@ docker run --rm \
 
 ## Notes
 
-- Replace `<priospot-cli-image>` and `<version>` with the published release values.
-- Paths passed to CLI options are relative to the working directory (`/work` in the examples).
+- Paths passed to CLI options are relative to the working directory (`/usr/src/app` in the examples).
 - For all supported flags and behavior details, refer to the GitHub README.

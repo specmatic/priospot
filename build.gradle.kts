@@ -38,6 +38,7 @@ specmatic {
 
     releasePublishTasks =
         listOf(
+            "dockerBuildxPublish",
             "gradle-plugin:publishPlugins",
             "publishAllPublicationsToMavenCentralRepository",
         )
