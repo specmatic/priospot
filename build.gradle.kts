@@ -1,31 +1,20 @@
-import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.JavaExec
-import java.io.File
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    base
-    kotlin("jvm") version "2.0.21" apply false
+    id("io.specmatic.gradle")
     id("org.jetbrains.kotlinx.kover") version "0.8.3" apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false
 }
 
 allprojects {
-    group = "io.specmatic.priospot"
-    version = "1.0.0"
-
     repositories {
         mavenCentral()
     }
 }
 
 subprojects {
-    apply(plugin = "maven-publish")
-
     plugins.withId("org.jetbrains.kotlin.jvm") {
         apply(plugin = "org.jetbrains.kotlinx.kover")
         apply(plugin = "io.gitlab.arturbosch.detekt")
@@ -59,25 +48,6 @@ subprojects {
         }
     }
 
-    plugins.withType<JavaPlugin> {
-        if (!plugins.hasPlugin("java-gradle-plugin")) {
-            extensions.configure<PublishingExtension> {
-                publications {
-                    if (findByName("mavenJava") == null) {
-                        create<MavenPublication>("mavenJava") {
-                            from(components["java"])
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-tasks.register("publishToMavenLocal") {
-    group = "publishing"
-    description = "Publishes all PrioSpot artifacts needed by consumers to Maven Local"
-    dependsOn(subprojects.map { "${it.path}:publishToMavenLocal" })
 }
 
 tasks.register<JavaExec>("priospot") {
@@ -135,5 +105,67 @@ tasks.register<JavaExec>("priospot") {
             "--churn-days", "30",
             "--output-json", layout.buildDirectory.file("reports/priospot/priospot.json").get().asFile.path
         )
+    }
+}
+
+specmatic {
+    kotlinVersion = "2.3.10"
+    kotlinApiVersion = KotlinVersion.KOTLIN_2_3
+
+    releasePublishTasks =
+        listOf(
+            "gradle-plugin:publishPlugins",
+            "publishAllPublicationsToMavenCentralRepository"
+        )
+
+    listOf(
+        project(":model"),
+        project(":ingest-source"),
+        project(":ingest-churn"),
+        project(":ingest-coverage"),
+        project(":ingest-complexity"),
+        project(":compute-c3"),
+        project(":report-svg"),
+        project(":engine"),
+        project(":compat-xml"),
+    ).forEach { moduleProject ->
+        withOSSLibrary(moduleProject) {
+            publishToMavenCentral()
+        }
+    }
+
+    withOSSApplication(project(":cli")) {
+        mainClass = "io.github.priospot.cli.MainKt"
+        publishToMavenCentral()
+    }
+
+    withOSSLibrary(project(":gradle-plugin")) {
+        publishToMavenCentral()
+        githubRelease()
+
+        publishGradle {
+            pom {
+                name = "PrioSpot Gradle Plugin"
+                description = "Computes C3 hotspots and treemap reports"
+                url = "https://github.com/specmatic/priospot"
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://opensource.org/license/mit"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "specmaticBuilders"
+                        name = "Specmatic Builders"
+                        email = "info@specmatic.io"
+                    }
+                }
+                scm {
+                    connection = "https://github.com/specmatic/priospot"
+                    url = "https://github.com/specmatic/priospot"
+                }
+            }
+        }
     }
 }

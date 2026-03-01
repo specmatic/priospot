@@ -7,3 +7,5 @@ out
 *.log
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+**/src/main/gen-kt/
+**/src/main/gen-resources/

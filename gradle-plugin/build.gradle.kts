@@ -1,7 +1,8 @@
 plugins {
-    kotlin("jvm")
-    `java-gradle-plugin`
     `maven-publish`
+    `java-gradle-plugin`
+    `kotlin-dsl`
+    id("com.gradle.plugin-publish") version "1.3.1"
 }
 
 dependencies {
@@ -19,8 +20,10 @@ gradlePlugin {
             implementationClass = "io.github.priospot.gradle.PriospotPlugin"
             displayName = "PrioSpot"
             description = "Computes C3 hotspots and treemap reports"
+            tags = listOf("c3", "hotspot", "priospot", "specmatic")
         }
     }
-}
 
-tasks.test { useJUnitPlatform() }
+    website = "https://github.com/specmatic/priospot"
+    vcsUrl = "https://github.com/specmatic/priospot"
+}
