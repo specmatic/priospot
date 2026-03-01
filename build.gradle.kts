@@ -57,7 +57,9 @@ specmatic {
     withOSSApplication(project(":cli")) {
         mainClass = "io.github.priospot.cli.MainKt"
         publishToMavenCentral()
-        dockerBuild()
+        dockerBuild {
+            imageName = "priospot"
+        }
     }
 
     withOSSLibrary(project(":gradle-plugin")) {
