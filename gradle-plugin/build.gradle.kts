@@ -5,6 +5,11 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
 }
 
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
 dependencies {
     implementation(gradleApi())
     implementation(project(":engine"))

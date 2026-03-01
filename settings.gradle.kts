@@ -1,8 +1,12 @@
 pluginManagement {
-    val specmaticGradlePluginVersion = settings.extra["specmaticGradlePluginVersion"] as String
+    val specmaticGradlePluginVersion = settings.providers.gradleProperty("specmaticGradlePluginVersion").get()
+    val priospotPluginVersion = settings.providers.gradleProperty("priospotPluginVersion").get()
+
     plugins {
         id("io.specmatic.gradle") version (specmaticGradlePluginVersion)
+        id("io.specmatic.priospot") version (priospotPluginVersion)
     }
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -12,7 +16,7 @@ pluginManagement {
             }
 
             content {
-                includeGroup("io.specmatic.gradle")
+                includeGroupAndSubgroups("io.specmatic")
             }
         }
 
