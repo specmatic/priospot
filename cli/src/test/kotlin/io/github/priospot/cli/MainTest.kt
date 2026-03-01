@@ -8,8 +8,6 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class MainTest {
@@ -154,7 +152,7 @@ class MainTest {
 
     @Test
     fun `analyze fails when neither coverage-report nor coverage-reports is given`() {
-        val ex = assertFailsWith<IllegalArgumentException> {
+        val err = captureStderr {
             main(
                 arrayOf(
                     "analyze",
@@ -165,7 +163,7 @@ class MainTest {
                 )
             )
         }
-        assertEquals("Missing required option --coverage-report or --coverage-reports", ex.message)
+        assertTrue(err.contains("Missing required option --coverage-report or --coverage-reports"))
     }
 
     private fun captureStdout(block: () -> Unit): String {
@@ -176,6 +174,18 @@ class MainTest {
             block()
         } finally {
             System.setOut(original)
+        }
+        return baos.toString()
+    }
+
+    private fun captureStderr(block: () -> Unit): String {
+        val original = System.err
+        val baos = ByteArrayOutputStream()
+        try {
+            System.setErr(PrintStream(baos))
+            block()
+        } finally {
+            System.setErr(original)
         }
         return baos.toString()
     }
