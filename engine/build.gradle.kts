@@ -9,7 +9,7 @@ dependencies {
     implementation(project(":compute-c3"))
     implementation(project(":report-svg"))
     implementation(project(":compat-xml"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.1")
     testImplementation(kotlin("test"))
 }
 
