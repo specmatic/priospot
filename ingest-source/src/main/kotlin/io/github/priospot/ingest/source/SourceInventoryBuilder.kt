@@ -24,8 +24,10 @@ class SourceInventoryBuilder {
                         pathStream
                             .filter { it.isRegularFile() }
                             .map { path ->
-                                val relative = normalizePath(basePath.relativize(path).toString())
-                                FileEntry(name = path.name, path = relative)
+                                val normalizedPath =
+                                    runCatching { basePath.relativize(path).toString() }
+                                        .getOrElse { path.toAbsolutePath().normalize().toString() }
+                                FileEntry(name = path.name, path = normalizePath(normalizedPath))
                             }
                             .toList()
                     }
