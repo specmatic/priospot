@@ -578,6 +578,6 @@ Compatibility mode can be removed after downstream consumers migrate.
 Implementation must include:
 1. Source code and at least one host integration (Gradle required for Kotlin profile).
 2. `README.md` with quickstart.
-3. JSON schema file (`schema/panopticode.schema.json`).
+3. JSON schema file (`schema/priospot.schema.json`).
 4. Example Gradle configuration and sample project.
 5. One non-Gradle integration example (for example Node.js script wrapper or CLI invocation).
