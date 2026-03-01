@@ -15,7 +15,9 @@ import io.github.priospot.model.sortedMetrics
 import org.w3c.dom.Element
 import java.nio.file.Files
 import java.nio.file.Path
+import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
+import org.xml.sax.InputSource
 
 class CoverageImporter {
     fun normalizeCoverageReport(reportPath: Path): CoverageDocument {
@@ -71,7 +73,13 @@ class CoverageImporter {
 
     private fun parseCoverageXml(reportPath: Path): CoverageDocument {
         val factory = DocumentBuilderFactory.newInstance()
+        // JaCoCo XML includes a DOCTYPE for report.dtd, which is not always present beside the XML.
+        // Parse without loading external DTD/entities so reports are portable across environments.
+        runCatching { factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false) }
+        runCatching { factory.setFeature("http://xml.org/sax/features/external-general-entities", false) }
+        runCatching { factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false) }
         val builder = factory.newDocumentBuilder()
+        builder.setEntityResolver { _, _ -> InputSource(StringReader("")) }
         val doc = builder.parse(reportPath.toFile())
         val root = doc.documentElement
         val generated = java.time.Instant.now().toString()

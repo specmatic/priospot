@@ -67,6 +67,45 @@ priospot {
 }
 ```
 
+## JaCoCo Integration (Gradle)
+
+PrioSpot accepts JaCoCo XML reports. If you use the JaCoCo plugin, point PrioSpot to the JaCoCo XML output and (optionally) make `priospot` depend on `jacocoTestReport`.
+
+```kotlin
+plugins {
+    kotlin("jvm") version "2.0.21"
+    jacoco
+    id("io.specmatic.priospot") version "1.0.0"
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(false)
+        csv.required.set(false)
+    }
+}
+
+priospot {
+    projectName.set("sample-kotlin-service")
+    sourceRoots.set(listOf("src/main/kotlin", "src/test/kotlin"))
+    coverageReports.set(listOf("build/reports/jacoco/test/jacocoTestReport.xml"))
+    complexityReports.set(listOf("build/reports/detekt/detekt.xml"))
+    coverageTask.set("jacocoTestReport")
+    complexityTask.set("detekt")
+}
+```
+
+Run:
+
+```bash
+./gradlew test jacocoTestReport priospot
+```
+
+Notes:
+- Auto-discovery currently defaults to Kover (`build/reports/kover/report.xml`), so JaCoCo users should set `coverageReports` explicitly.
+- In multi-module builds, provide all JaCoCo XML report paths via `coverageReports`.
+
 Expected outputs in `build/reports/priospot`:
 
 - `priospot.json`
