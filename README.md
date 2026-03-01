@@ -114,36 +114,9 @@ Expected outputs in `build/reports/priospot`:
 - `complexity-interactive-treemap.svg`
 - `churn-interactive-treemap.svg`
 
-## Quickstart (CLI)
+## Quick Start (Jar and Docker)
 
-Analyze and generate all canonical outputs:
-
-```bash
-./gradlew :cli:run --args='analyze \
-  --project-name sample \
-  --source-roots src/main/kotlin \
-  --coverage-report build/reports/kover/report.xml \
-  --complexity-report build/reports/detekt/detekt.xml \
-  --churn-days 30 \
-  --output-json build/reports/priospot/priospot.json'
-```
-
-Generate a single report from existing JSON:
-
-```bash
-./gradlew :cli:run --args='report \
-  --input-json build/reports/priospot/priospot.json \
-  --type priospot \
-  --output-svg build/reports/priospot/priospot-interactive-treemap.svg'
-```
-
-## CLI Distribution (Jar and Docker)
-
-The CLI is published as:
-- a runnable jar on Maven Central (`io.specmatic.priospot:cli`)
-- release artifacts on GitHub Releases
-
-Direct links:
+Download the CLI from either:
 - Maven Central: https://search.maven.org/artifact/io.specmatic.priospot/cli
 - GitHub Releases: https://github.com/specmatic/priospot/releases
 
@@ -152,14 +125,7 @@ Direct links:
 From Maven Central:
 
 ```bash
-mvn dependency:get -Dartifact=io.specmatic.priospot:cli:<version>
-java -jar ~/.m2/repository/io/specmatic/priospot/cli/<version>/cli-<version>.jar --help
-```
-
-From a GitHub Release:
-
-```bash
-java -jar priospot-cli-<version>.jar --help
+java -jar priospot.jar --help
 ```
 
 ### Use the Docker Image
@@ -168,9 +134,8 @@ A Docker image is also published with releases. Use the image/tag from the relea
 
 ```bash
 docker run --rm \
-  -v "$PWD:/work" \
-  -w /work \
-  <priospot-cli-image>:<version> \
+  -v "$PWD:/usr/src/app" \
+  specmatic/priospot \
   analyze \
   --project-name sample \
   --source-roots src/main/kotlin \
