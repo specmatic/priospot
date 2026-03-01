@@ -55,12 +55,16 @@ specmatic {
     ).forEach { moduleProject ->
         withOSSLibrary(moduleProject) {
             publishToMavenCentral()
+            githubRelease()
         }
     }
 
     withOSSApplication(project(":cli")) {
         mainClass = "io.github.priospot.cli.MainKt"
         publishToMavenCentral()
+        githubRelease {
+            addFile("unobfuscatedShadowJar", "priospot.jar")
+        }
         dockerBuild {
             imageName = "priospot"
         }
