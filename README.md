@@ -143,6 +143,10 @@ The CLI is published as:
 - a runnable jar on Maven Central (`io.specmatic.priospot:cli`)
 - release artifacts on GitHub Releases
 
+Direct links:
+- Maven Central: https://search.maven.org/artifact/io.specmatic.priospot/cli
+- GitHub Releases: https://github.com/specmatic/priospot/releases
+
 ### Use the CLI Jar
 
 From Maven Central:
