@@ -14,6 +14,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 
 abstract class PriospotTask : DefaultTask() {
@@ -95,12 +96,12 @@ abstract class PriospotTask : DefaultTask() {
         result.diagnostics.forEach { logger.warn(it) }
     }
 
-    private fun discoverSourceRoots(project: Project): List<Path> = project.subprojects
-        .flatMap { subproject ->
-            listOf(
-                subproject.file("src/main/kotlin"),
-                subproject.file("src/test/kotlin"),
-            )
+    private fun discoverSourceRoots(project: Project): List<Path> = (listOf(project) + project.subprojects)
+        .flatMap { currentProject ->
+            currentProject.extensions
+                .findByType(SourceSetContainer::class.java)
+                ?.flatMap { sourceSet -> sourceSet.allSource.srcDirs.toList() }
+                .orEmpty()
         }.filter(File::exists)
         .map { it.toPath() }
         .distinct()
