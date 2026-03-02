@@ -14,6 +14,8 @@ dependencies {
     implementation(gradleApi())
     implementation(project(":engine"))
     implementation(project(":model"))
+    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.8")
+    implementation("org.jetbrains.kotlinx:kover-gradle-plugin:0.9.7")
 
     testImplementation(gradleTestKit())
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
