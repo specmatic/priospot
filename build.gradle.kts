@@ -1,11 +1,7 @@
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("io.specmatic.gradle")
-    id("io.specmatic.priospot")
-    id("org.jetbrains.kotlinx.kover") version "0.9.7"
-    id("io.gitlab.arturbosch.detekt") version "1.23.8"
 }
 
 allprojects {
@@ -16,17 +12,6 @@ allprojects {
 }
 
 subprojects {
-    plugins.withId("org.jetbrains.kotlin.jvm") {
-        apply(plugin = "org.jetbrains.kotlinx.kover")
-        apply(plugin = "io.gitlab.arturbosch.detekt")
-        configure<DetektExtension> {
-            buildUponDefaultConfig = true
-            allRules = false
-            ignoreFailures = true
-            parallel = true
-        }
-    }
-
     tasks.withType<Test> {
         maxParallelForks = 4
     }
