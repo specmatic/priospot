@@ -2,7 +2,7 @@ plugins {
     `maven-publish`
     `java-gradle-plugin`
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.3.1"
+    id("com.gradle.plugin-publish") version "2.1.1"
 }
 
 repositories {
