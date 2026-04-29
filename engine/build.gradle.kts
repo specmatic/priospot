@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":compute-c3"))
     implementation(project(":report-svg"))
     implementation(project(":compat-xml"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.3")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
