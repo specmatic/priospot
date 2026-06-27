@@ -14,7 +14,7 @@ dependencies {
     implementation(gradleApi())
     implementation(project(":engine"))
     implementation(project(":model"))
-    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.8")
+    implementation("dev.detekt:detekt-gradle-plugin:2.0.0-alpha.5")
     implementation("org.jetbrains.kotlinx:kover-gradle-plugin:0.9.8")
 
     testImplementation(gradleTestKit())

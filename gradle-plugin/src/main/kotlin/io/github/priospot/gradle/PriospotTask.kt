@@ -2,10 +2,9 @@ package io.github.priospot.gradle
 
 import io.github.priospot.engine.PriospotConfig
 import io.github.priospot.engine.PriospotEngine
-import java.io.File
 import java.nio.file.Path
+import java.nio.file.Paths
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -14,10 +13,12 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
 
 abstract class PriospotTask : DefaultTask() {
+    @get:Input
+    abstract val baseDir: Property<String>
+
     @get:Input
     abstract val projectName: Property<String>
 
@@ -53,27 +54,15 @@ abstract class PriospotTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val base =
-            project.layout.projectDirectory.asFile
-                .toPath()
-        val resolvedSourceRoots =
-            if (sourceRoots.get().isEmpty()) {
-                discoverSourceRoots(project)
-            } else {
-                sourceRoots.get().map { base.resolve(it) }
-            }
-        val resolvedCoverageReports =
-            if (coverageReports.get().isEmpty()) {
-                discoverExistingReports(project, "build/reports/kover/report.xml")
-            } else {
-                coverageReports.get().map { base.resolve(it) }
-            }
-        val resolvedComplexityReports =
-            if (complexityReports.get().isEmpty()) {
-                discoverExistingReports(project, "build/reports/detekt/detekt.xml")
-            } else {
-                complexityReports.get().map { base.resolve(it) }
-            }
+        val base = Paths.get(baseDir.get())
+        val resolvedSourceRoots = resolvePaths(base, sourceRoots.get())
+        val resolvedCoverageReports = resolvePaths(base, coverageReports.get())
+        val resolvedComplexityReports = resolvePaths(base, complexityReports.get())
+
+        if (resolvedSourceRoots.isEmpty()) {
+            logger.lifecycle("PrioSpot skipped: no source roots configured or discovered")
+            return
+        }
 
         val config =
             PriospotConfig(
@@ -96,19 +85,7 @@ abstract class PriospotTask : DefaultTask() {
         result.diagnostics.forEach { logger.warn(it) }
     }
 
-    private fun discoverSourceRoots(project: Project): List<Path> = (listOf(project) + project.subprojects)
-        .flatMap { currentProject ->
-            currentProject.extensions
-                .findByType(SourceSetContainer::class.java)
-                ?.flatMap { sourceSet -> sourceSet.allSource.srcDirs.toList() }
-                .orEmpty()
-        }.filter(File::exists)
-        .map { it.toPath() }
-        .distinct()
-
-    private fun discoverExistingReports(project: Project, relativePath: String): List<Path> = project.subprojects
-        .map { it.file(relativePath) }
-        .filter(File::exists)
-        .map { it.toPath() }
-        .distinct()
+    private fun resolvePaths(base: Path, values: List<String>): List<Path> = values.map { value ->
+        Paths.get(value).let { if (it.isAbsolute) it else base.resolve(it) }
+    }
 }

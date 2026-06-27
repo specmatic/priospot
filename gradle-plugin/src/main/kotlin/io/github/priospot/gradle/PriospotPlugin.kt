@@ -1,11 +1,13 @@
 package io.github.priospot.gradle
 
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektPlugin
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.plugin.DetektPlugin
+import java.io.File
 import kotlinx.kover.gradle.plugin.KoverGradlePlugin
 import kotlinx.kover.gradle.plugin.dsl.tasks.KoverReport
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.withType
@@ -22,6 +24,7 @@ class PriospotPlugin : Plugin<Project> {
                 group = "verification"
                 description = "Computes C3 hotspots and generates PrioSpot reports"
 
+                baseDir.set(project.layout.projectDirectory.asFile.absolutePath)
                 projectName.set(extension.projectName.orElse(project.name))
                 projectVersion.set(extension.projectVersion.orElse(project.version.toString()))
                 sourceRoots.set(extension.sourceRoots.orElse(emptyList()))
@@ -36,6 +39,21 @@ class PriospotPlugin : Plugin<Project> {
                 dependsOn(project.allprojects.map { it.tasks.withType<Detekt>() })
                 dependsOn(project.allprojects.map { it.tasks.withType<KoverReport>() })
             }
+
+        project.gradle.projectsEvaluated {
+            task.configure {
+                if (sourceRoots.get().isEmpty()) {
+                    val elements = discoverSourceRoots(project)
+                    sourceRoots.set(elements)
+                }
+                if (coverageReports.get().isEmpty()) {
+                    coverageReports.set(discoverExistingReports(project, "build/reports/kover/report.xml"))
+                }
+                if (complexityReports.get().isEmpty()) {
+                    complexityReports.set(discoverExistingReports(project, "build/reports/detekt/detekt.xml"))
+                }
+            }
+        }
 
         project.afterEvaluate {
             extension.coverageTask.orNull?.let { coverageTaskName ->
@@ -53,7 +71,35 @@ class PriospotPlugin : Plugin<Project> {
 
         // Temporarily keep Detekt informational so CI can proceed.
         project.tasks.withType<Detekt> {
-            ignoreFailures = true
+            ignoreFailures.set(true)
         }
     }
+
+    private fun discoverSourceRoots(project: Project): List<String> = (listOf(project) + project.subprojects)
+        .flatMap { currentProject ->
+            val fromSourceSets =
+                currentProject.extensions
+                    .findByType(SourceSetContainer::class.java)
+                    ?.flatMap { sourceSet -> sourceSet.allSource.srcDirs.toList() }
+                    .orEmpty()
+
+            if (fromSourceSets.isNotEmpty()) {
+                fromSourceSets
+            } else {
+                listOf(
+                    "src/main/kotlin",
+                    "src/test/kotlin",
+                    "src/main/java",
+                    "src/test/java",
+                ).map(currentProject::file)
+            }
+        }.filter(File::exists)
+        .map { it.absolutePath }
+        .distinct()
+
+    private fun discoverExistingReports(project: Project, relativePath: String): List<String> = (listOf(project) + project.subprojects)
+        .map { it.file(relativePath) }
+        .filter(File::exists)
+        .map { it.absolutePath }
+        .distinct()
 }
