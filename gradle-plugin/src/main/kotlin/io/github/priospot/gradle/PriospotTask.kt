@@ -2,13 +2,13 @@ package io.github.priospot.gradle
 
 import io.github.priospot.engine.PriospotConfig
 import io.github.priospot.engine.PriospotEngine
-import java.nio.file.Paths
 import java.nio.file.Path
+import java.nio.file.Paths
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Property
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
@@ -85,8 +85,7 @@ abstract class PriospotTask : DefaultTask() {
         result.diagnostics.forEach { logger.warn(it) }
     }
 
-    private fun resolvePaths(base: Path, values: List<String>): List<Path> =
-        values.map { value ->
-            Paths.get(value).let { if (it.isAbsolute) it else base.resolve(it) }
-        }
+    private fun resolvePaths(base: Path, values: List<String>): List<Path> = values.map { value ->
+        Paths.get(value).let { if (it.isAbsolute) it else base.resolve(it) }
+    }
 }

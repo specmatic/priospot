@@ -75,33 +75,31 @@ class PriospotPlugin : Plugin<Project> {
         }
     }
 
-    private fun discoverSourceRoots(project: Project): List<String> =
-        (listOf(project) + project.subprojects)
-            .flatMap { currentProject ->
-                val fromSourceSets =
-                    currentProject.extensions
-                        .findByType(SourceSetContainer::class.java)
-                        ?.flatMap { sourceSet -> sourceSet.allSource.srcDirs.toList() }
-                        .orEmpty()
+    private fun discoverSourceRoots(project: Project): List<String> = (listOf(project) + project.subprojects)
+        .flatMap { currentProject ->
+            val fromSourceSets =
+                currentProject.extensions
+                    .findByType(SourceSetContainer::class.java)
+                    ?.flatMap { sourceSet -> sourceSet.allSource.srcDirs.toList() }
+                    .orEmpty()
 
-                if (fromSourceSets.isNotEmpty()) {
-                    fromSourceSets
-                } else {
-                    listOf(
-                        "src/main/kotlin",
-                        "src/test/kotlin",
-                        "src/main/java",
-                        "src/test/java",
-                    ).map(currentProject::file)
-                }
-            }.filter(File::exists)
-            .map { it.absolutePath }
-            .distinct()
+            if (fromSourceSets.isNotEmpty()) {
+                fromSourceSets
+            } else {
+                listOf(
+                    "src/main/kotlin",
+                    "src/test/kotlin",
+                    "src/main/java",
+                    "src/test/java",
+                ).map(currentProject::file)
+            }
+        }.filter(File::exists)
+        .map { it.absolutePath }
+        .distinct()
 
-    private fun discoverExistingReports(project: Project, relativePath: String): List<String> =
-        (listOf(project) + project.subprojects)
-            .map { it.file(relativePath) }
-            .filter(File::exists)
-            .map { it.absolutePath }
-            .distinct()
+    private fun discoverExistingReports(project: Project, relativePath: String): List<String> = (listOf(project) + project.subprojects)
+        .map { it.file(relativePath) }
+        .filter(File::exists)
+        .map { it.absolutePath }
+        .distinct()
 }
